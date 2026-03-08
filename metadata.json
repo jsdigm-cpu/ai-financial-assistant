@@ -1,0 +1,5 @@
+{
+  "name": "AI 재무관리 (소상공인)",
+  "description": "An AI-powered dashboard that automatically integrates, cleans, and analyzes transaction data from multiple bank files (Excel/CSV). It provides customized financial reports, deep analysis, and strategic recommendations tailored to the user's business.",
+  "requestFramePermissions": []
+}
