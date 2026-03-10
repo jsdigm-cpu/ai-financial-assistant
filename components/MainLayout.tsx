@@ -77,6 +77,44 @@ const MainLayout: React.FC<Props> = ({ initialData, businessInfo, uploadedFiles,
     }
   }, [categories, categoryRules, businessInfo]);
 
+  // 전체 세션 자동 저장: 거래 데이터 + 카테고리 + 규칙 + 사업 정보
+  useEffect(() => {
+    if (transactions.length > 0 && categories.length > 0 && !isInitialLoading) {
+      try {
+        const sessionData = {
+          businessInfo,
+          uploadedFiles,
+          transactions,
+          categories,
+          categoryRules,
+          savedAt: new Date().toISOString(),
+        };
+        localStorage.setItem('ai_tongjang_last_session', JSON.stringify(sessionData));
+      } catch (e) {
+        console.warn('세션 저장 실패 (용량 초과 가능):', e);
+      }
+    }
+  }, [transactions, categories, categoryRules, businessInfo, uploadedFiles, isInitialLoading]);
+
+  // 데이터 내보내기 (JSON 파일 다운로드)
+  const handleExportData = useCallback(() => {
+    const exportData = {
+      businessInfo,
+      uploadedFiles,
+      transactions,
+      categories,
+      categoryRules,
+      savedAt: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${businessInfo.name}_분석백업_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [businessInfo, uploadedFiles, transactions, categories, categoryRules]);
+
   const applyRules = useCallback((txList: Transaction[], ruleList: CategoryRule[]): Transaction[] => {
       return txList.map(tx => {
           const matchingRule = ruleList
@@ -449,7 +487,7 @@ const MainLayout: React.FC<Props> = ({ initialData, businessInfo, uploadedFiles,
     <div className="flex flex-col h-screen bg-background-main">
       <LoadingModal 
         isOpen={isInitialLoading} 
-        mainText="AI 재무 분석을 실행하고 있습니다."
+        mainText="AI 통장정리 분석을 실행하고 있습니다."
         progressMessages={loadingProgressMessages}
         estimatedDuration={Math.max(45, Math.round(initialData.transactions.length / 100))}
        />
@@ -482,6 +520,13 @@ const MainLayout: React.FC<Props> = ({ initialData, businessInfo, uploadedFiles,
           </div>
           <div className="flex items-center gap-2">
                <input type="file" ref={fileInputRef} onChange={handleFileChange} multiple className="hidden" accept=".xlsx, .xls, .csv" />
+              <button
+                  onClick={handleExportData}
+                  title="분석 데이터를 JSON 파일로 백업합니다"
+                  className="px-3 py-2 bg-surface-subtle hover:bg-surface-card text-text-muted hover:text-brand-accent font-semibold rounded-lg border border-border-color transition-colors duration-200 text-sm"
+              >
+                  💾 백업
+              </button>
               <button
                   onClick={handleAddFilesClick}
                   className="px-4 py-2 bg-brand-accent hover:bg-cyan-600 text-white font-semibold rounded-lg shadow-sm transition-colors duration-200"

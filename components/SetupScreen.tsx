@@ -13,12 +13,15 @@ interface UploadedFile {
 interface Props {
   onDataProcessed: (data: ProcessedData, info: BusinessInfo, files: UploadedFileInfo[]) => void;
   onGoBack?: () => void;
+  savedSession?: { businessInfo: BusinessInfo; savedAt: string; transactions: any[] } | null;
+  onRestoreSession?: () => void;
+  onImportSession?: (data: any) => void;
 }
 
 const STORAGE_KEY_API = 'ai_finance_gemini_api_key';
 const STORAGE_KEY_BIZ = 'ai_finance_last_business_info';
 
-const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack }) => {
+const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack, savedSession, onRestoreSession, onImportSession }) => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKeyGuide, setShowApiKeyGuide] = useState(false);
@@ -167,11 +170,68 @@ const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack }) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 8l3 5m0 0l3-5m-3 5v4m0-4h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <h1 className="text-4xl font-bold text-text-primary">AI 재무비서</h1>
-                <p className="mt-2 text-md text-text-muted">사장님의 복잡한 재무 관리, AI가 쉽고 똑똑하게 해결해 드립니다.</p>
+                <h1 className="text-4xl font-bold text-text-primary">AI 통장정리</h1>
+                <p className="mt-1 text-lg font-medium text-brand-accent">개인 사업자용</p>
+                <p className="mt-3 text-md text-text-muted">통장 내역만 올리면, AI가 알아서 매출·비용을 분류하고<br/>손익까지 계산해드립니다.</p>
             </div>
 
             <div className="space-y-6">
+                {/* 이전 분석 불러오기 */}
+                {(savedSession || onImportSession) && (
+                  <div className="p-5 bg-green-500/10 rounded-lg border border-green-500/30">
+                    <h3 className="text-lg font-semibold text-green-400 mb-3">📂 이전 분석 불러오기</h3>
+                    <div className="space-y-3">
+                      {savedSession && onRestoreSession && (
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-text-primary font-medium">{savedSession.businessInfo.name}</p>
+                            <p className="text-xs text-text-muted">
+                              {new Date(savedSession.savedAt).toLocaleDateString('ko-KR')} 저장 · {savedSession.transactions.length.toLocaleString()}건
+                            </p>
+                          </div>
+                          <button
+                            onClick={onRestoreSession}
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg text-sm transition-colors"
+                          >
+                            불러오기
+                          </button>
+                        </div>
+                      )}
+                      {onImportSession && (
+                        <div className="flex items-center justify-between pt-2 border-t border-border-color">
+                          <p className="text-sm text-text-muted">백업 파일(.json)에서 불러오기</p>
+                          <label className="px-4 py-2 bg-surface-card hover:bg-surface-subtle text-brand-accent font-semibold rounded-lg text-sm cursor-pointer border border-border-color transition-colors">
+                            파일 선택
+                            <input
+                              type="file"
+                              accept=".json"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  try {
+                                    const data = JSON.parse(ev.target?.result as string);
+                                    if (data.businessInfo && data.transactions) {
+                                      onImportSession(data);
+                                    } else {
+                                      alert('올바른 백업 파일이 아닙니다.');
+                                    }
+                                  } catch {
+                                    alert('파일을 읽을 수 없습니다.');
+                                  }
+                                };
+                                reader.readAsText(file);
+                              }}
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Step 0: API 키 */}
                 <div className="p-5 bg-surface-subtle rounded-lg border border-border-color">
                     <div className="flex items-center justify-between mb-3">

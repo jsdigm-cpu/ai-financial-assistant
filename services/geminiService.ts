@@ -503,51 +503,91 @@ export const categorizeTransactions = async (
             5.  **응답 규칙:** 모든 거래 ID에 대해 위 카테고리 중 정확히 하나를 할당. {"id": "거래 ID", "category": "계정명"} 형식의 JSON 배열로 반환.
         `;
 
-        try {
-            const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                id: { type: Type.STRING },
-                                category: { type: Type.STRING }
-                            },
-                            required: ["id", "category"]
-                        }
-                    },
-                    thinkingConfig: { thinkingBudget: 0 }
-                }
-            });
-            // FIX: The response.text from the Gemini API is already a clean JSON string when responseMimeType and responseSchema are used. No need for further string manipulation like trim() or replace().
-            const jsonText = response.text;
-            const resultArray: { id: string; category: string }[] = JSON.parse(jsonText);
-            
-            if (!Array.isArray(resultArray)) {
-                console.error("AI categorization did not return an array for a batch:", resultArray);
-                return;
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            id: { type: Type.STRING },
+                            category: { type: Type.STRING }
+                        },
+                        required: ["id", "category"]
+                    }
+                },
+                thinkingConfig: { thinkingBudget: 0 }
             }
+        });
+        const jsonText = response.text;
+        const resultArray: { id: string; category: string }[] = JSON.parse(jsonText);
+        
+        if (!Array.isArray(resultArray)) {
+            console.error("AI categorization did not return an array for a batch:", resultArray);
+            return;
+        }
 
-            resultArray.forEach(item => {
-                if (item && typeof item.id === 'string' && typeof item.category === 'string') {
-                    // AI가 반환한 카테고리명을 표준 계정명으로 정규화
-                    const originalTx = batch.find(t => t.id === item.id);
-                    const isIncome = originalTx ? originalTx.credit > 0 : false;
-                    allCategorizedMap[item.id] = normalizeCategoryName(item.category, isIncome);
+        resultArray.forEach(item => {
+            if (item && typeof item.id === 'string' && typeof item.category === 'string') {
+                const originalTx = batch.find(t => t.id === item.id);
+                const isIncome = originalTx ? originalTx.credit > 0 : false;
+                allCategorizedMap[item.id] = normalizeCategoryName(item.category, isIncome);
+            }
+        });
+    };
+
+    // ============================================================
+    // Rate Limit 안전 처리: 순차 실행 + 딜레이 + 자동 재시도
+    // ============================================================
+    // Gemini 무료 키: 분당 15~30회 제한
+    // 기존: Promise.all → 모든 배치 동시 전송 → 429 에러 발생
+    // 개선: 2개씩 순차 전송 + 그룹 간 2초 대기 + 실패 시 3회 재시도
+
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    const processBatchWithRetry = async (batch: Transaction[], batchIndex: number): Promise<void> => {
+        const MAX_RETRIES = 3;
+        
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+            try {
+                await processBatch(batch);
+                console.log(`[분류] 배치 ${batchIndex + 1}/${transactionBatches.length} 완료 (${batch.length}건)`);
+                return;
+            } catch (error: any) {
+                const isRateLimit = error?.status === 429 || 
+                                    error?.message?.includes('429') || 
+                                    error?.message?.includes('RESOURCE_EXHAUSTED') ||
+                                    error?.message?.includes('quota');
+                
+                if (isRateLimit && attempt < MAX_RETRIES - 1) {
+                    const waitTime = Math.pow(2, attempt + 1) * 5000; // 10초, 20초, 40초
+                    console.warn(`[분류] 배치 ${batchIndex + 1} Rate Limit. ${waitTime / 1000}초 후 재시도 (${attempt + 1}/${MAX_RETRIES})`);
+                    await delay(waitTime);
+                } else {
+                    console.error(`[분류] 배치 ${batchIndex + 1} 최종 실패:`, error);
+                    return; // 이 배치 건너뛰고 다음 배치로
                 }
-            });
-        } catch (error) {
-            console.error("Error categorizing a batch of transactions:", error);
-            // Don't throw; allow other batches to complete.
+            }
         }
     };
-    
-    // Using Promise.all to run batches in parallel for maximum speed.
-    await Promise.all(transactionBatches.map(batch => processBatch(batch)));
+
+    const CONCURRENT_LIMIT = 2;      // 동시 최대 2개 요청
+    const DELAY_BETWEEN_GROUPS = 2000; // 그룹 간 2초 대기
+
+    for (let i = 0; i < transactionBatches.length; i += CONCURRENT_LIMIT) {
+        const group = transactionBatches
+            .slice(i, i + CONCURRENT_LIMIT)
+            .map((batch, idx) => processBatchWithRetry(batch, i + idx));
+        
+        await Promise.all(group);
+        
+        if (i + CONCURRENT_LIMIT < transactionBatches.length) {
+            await delay(DELAY_BETWEEN_GROUPS);
+        }
+    }
 
     return allCategorizedMap;
 };
