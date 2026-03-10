@@ -217,7 +217,7 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
   }) => (
     <tr className="hover:bg-surface-subtle/30">
       <td className={`py-1.5 px-3 ${indent ? 'pl-8' : ''} text-text-muted`}>{label}</td>
-      <td className={`py-1.5 px-3 text-right ${amount < 0 ? 'text-red-400' : 'text-text-primary'}`}>{fmt(amount)}</td>
+      <td className={`py-1.5 px-3 text-right ${amount < 0 ? 'text-red-600' : 'text-text-primary'}`}>{fmt(amount)}</td>
       <td className="py-1.5 px-3 text-right text-text-muted">{pct(amount, total)}</td>
     </tr>
   );
@@ -225,7 +225,7 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
   const PlSubtotal = ({ label, amount, total }: { label: string; amount: number; total: number }) => (
     <tr className="border-t border-border-color bg-surface-subtle/50">
       <td className="py-2 px-3 pl-6 font-semibold text-brand-accent">{label}</td>
-      <td className={`py-2 px-3 text-right font-semibold ${amount < 0 ? 'text-red-400' : 'text-brand-accent'}`}>{fmt(amount)}</td>
+      <td className={`py-2 px-3 text-right font-semibold ${amount < 0 ? 'text-red-600' : 'text-brand-accent'}`}>{fmt(amount)}</td>
       <td className="py-2 px-3 text-right font-semibold text-brand-accent">{pct(amount, total)}</td>
     </tr>
   );
@@ -239,7 +239,7 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
   const PlTotalRow = ({ label, amount, total, star = false }: { label: string; amount: number; total: number; star?: boolean }) => (
     <tr className="border-t-2 border-brand-primary bg-surface-subtle">
       <td className="py-3 px-3 font-bold text-text-inverted">{star ? '★ ' : ''}{label}</td>
-      <td className={`py-3 px-3 text-right font-bold text-lg ${amount < 0 ? 'text-red-400' : 'text-green-400'}`}>{fmt(amount)}</td>
+      <td className={`py-3 px-3 text-right font-bold text-lg ${amount < 0 ? 'text-red-600' : 'text-green-600'}`}>{fmt(amount)}</td>
       <td className="py-3 px-3 text-right font-bold text-text-inverted">{pct(amount, total)}</td>
     </tr>
   );

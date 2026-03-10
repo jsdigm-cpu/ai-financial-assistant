@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ProcessedData, BusinessInfo, BusinessType, UploadedFileInfo } from '../types';
+import { ProcessedData, BusinessInfo, BusinessType, AccountType, UploadedFileInfo } from '../types';
 import { parseFile } from '../services/parser';
 import { Transaction } from '../types';
 import { BUSINESS_PRESETS } from '../constants';
@@ -26,6 +26,7 @@ const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack, savedSession,
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKeyGuide, setShowApiKeyGuide] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [accountType, setAccountType] = useState<string>(AccountType.SOLE_PROPRIETOR);
   const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({
     name: '',
     owner: '',
@@ -52,6 +53,7 @@ const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack, savedSession,
     if (savedBiz) {
       try {
         const parsed = JSON.parse(savedBiz);
+        if (parsed.accountType) setAccountType(parsed.accountType);
         setBusinessInfo(prev => ({ ...prev, ...parsed }));
       } catch (e) { /* 무시 */ }
     }
@@ -112,15 +114,20 @@ const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack, savedSession,
       setError("Gemini API 키를 입력해주세요.");
       return;
     }
-    if (files.length === 0 || !businessInfo.name || !businessInfo.owner || !businessInfo.items) {
-      setError("상호명, 대표자명, 주요 취급 품목을 입력하고, 하나 이상의 파일을 업로드해주세요.");
+    const isPersonal = accountType === AccountType.PERSONAL;
+    if (files.length === 0 || !businessInfo.name || !businessInfo.owner || (!isPersonal && !businessInfo.items)) {
+      setError(isPersonal
+        ? "이름을 입력하고, 하나 이상의 파일을 업로드해주세요."
+        : "상호명, 대표자명, 주요 취급 품목을 입력하고, 하나 이상의 파일을 업로드해주세요.");
       return;
     }
-    
+
+    const finalBusinessInfo = { ...businessInfo, accountType };
+
     // API 키 설정 및 저장
     setGeminiApiKey(apiKey.trim());
     localStorage.setItem(STORAGE_KEY_API, apiKey.trim());
-    localStorage.setItem(STORAGE_KEY_BIZ, JSON.stringify(businessInfo));
+    localStorage.setItem(STORAGE_KEY_BIZ, JSON.stringify(finalBusinessInfo));
 
     setIsLoading(true);
     setError(null);
@@ -145,9 +152,9 @@ const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack, savedSession,
       title: f.title
     }));
     
-    onDataProcessed({ transactions: allTransactions, errors: allErrors }, businessInfo, fileInfos);
+    onDataProcessed({ transactions: allTransactions, errors: allErrors }, finalBusinessInfo, fileInfos);
 
-  }, [files, businessInfo, apiKey, onDataProcessed]);
+  }, [files, businessInfo, accountType, apiKey, onDataProcessed]);
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
@@ -171,15 +178,14 @@ const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack, savedSession,
                     </svg>
                 </div>
                 <h1 className="text-4xl font-bold text-text-primary">AI 통장정리</h1>
-                <p className="mt-1 text-lg font-medium text-brand-accent">개인 사업자용</p>
-                <p className="mt-3 text-md text-text-muted">통장 내역만 올리면, AI가 알아서 매출·비용을 분류하고<br/>손익까지 계산해드립니다.</p>
+                <p className="mt-3 text-md text-text-muted">통장 내역만 올리면, AI가 알아서 수입·지출을 분류하고<br/>한눈에 정리해드립니다.</p>
             </div>
 
             <div className="space-y-6">
                 {/* 이전 분석 불러오기 */}
                 {(savedSession || onImportSession) && (
-                  <div className="p-5 bg-green-500/10 rounded-lg border border-green-500/30">
-                    <h3 className="text-lg font-semibold text-green-400 mb-3">📂 이전 분석 불러오기</h3>
+                  <div className="p-5 bg-green-50 rounded-lg border border-green-200">
+                    <h3 className="text-lg font-semibold text-green-600 mb-3">📂 이전 분석 불러오기</h3>
                     <div className="space-y-3">
                       {savedSession && onRestoreSession && (
                         <div className="flex items-center justify-between">
@@ -249,7 +255,7 @@ const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack, savedSession,
                             <p>2. Google 계정으로 로그인합니다.</p>
                             <p>3. "API 키 만들기" 버튼을 클릭합니다.</p>
                             <p>4. 생성된 키를 복사하여 아래에 붙여넣기 합니다.</p>
-                            <p className="text-yellow-400 mt-2">⚠️ API 키는 본인만 사용하세요. 타인에게 공유하지 마세요.</p>
+                            <p className="text-yellow-600 mt-2">⚠️ API 키는 본인만 사용하세요. 타인에게 공유하지 마세요.</p>
                         </div>
                     )}
                     <input 
@@ -260,39 +266,77 @@ const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack, savedSession,
                         placeholder="Gemini API 키를 입력하세요 (AIza...)"
                         autoComplete="off"
                     />
-                    {apiKey && <p className="text-xs text-green-400 mt-1">✓ API 키가 입력되었습니다. (브라우저에 안전하게 저장됩니다)</p>}
+                    {apiKey && <p className="text-xs text-green-600 mt-1">✓ API 키가 입력되었습니다. (브라우저에 안전하게 저장됩니다)</p>}
                 </div>
 
-                {/* Step 1: 기본 사업 정보 */}
-                <div className="p-5 bg-surface-subtle rounded-lg border border-border-color space-y-4">
-                    <h3 className="text-lg font-semibold text-brand-primary">📋 사업 정보 입력 (필수)</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-text-muted mb-1">상호명</label>
-                            <input type="text" name="name" id="name" value={businessInfo.name} onChange={handleInfoChange} className="w-full bg-background-main border border-border-color rounded-md px-3 py-2 focus:ring-brand-primary focus:border-brand-primary text-text-primary" autoComplete="off" placeholder="예: 토담옛날통닭"/>
-                        </div>
-                        <div>
-                            <label htmlFor="owner" className="block text-sm font-medium text-text-muted mb-1">대표자명</label>
-                            <input type="text" name="owner" id="owner" value={businessInfo.owner} onChange={handleInfoChange} className="w-full bg-background-main border border-border-color rounded-md px-3 py-2 focus:ring-brand-primary focus:border-brand-primary text-text-primary" autoComplete="off" placeholder="예: 홍길동"/>
-                        </div>
-                        <div>
-                            <label htmlFor="type" className="block text-sm font-medium text-text-muted mb-1">업종 선택 (선택하면 자동 채움)</label>
-                            <select name="type" id="type" value={businessInfo.type} onChange={handleInfoChange} className="w-full bg-background-main border border-border-color rounded-md px-3 py-2 focus:ring-brand-primary focus:border-brand-primary text-text-primary">
-                                {Object.values(BusinessType).map(type => (
-                                    <option key={type} value={type}>{type}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label htmlFor="items" className="block text-sm font-medium text-text-muted mb-1">주요 취급 품목 (쉼표로 구분)</label>
-                            <input type="text" name="items" id="items" value={businessInfo.items} onChange={handleInfoChange} className="w-full bg-background-main border border-border-color rounded-md px-3 py-2 focus:ring-brand-primary focus:border-brand-primary text-text-primary" autoComplete="off" placeholder="예: 후라이드 치킨, 양념 치킨"/>
-                        </div>
+                {/* Step 0.5: 통장 구분 선택 */}
+                <div className="p-5 bg-surface-subtle rounded-lg border border-border-color">
+                    <h3 className="text-lg font-semibold text-brand-primary mb-3">🏦 통장 구분 선택</h3>
+                    <p className="text-sm text-text-muted mb-4">사용하시는 통장 종류를 선택해 주세요. 선택에 따라 최적의 분류 항목이 자동으로 설정됩니다.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {[
+                            { value: AccountType.PERSONAL, label: '개인통장', desc: '개인 생활비, 용돈 관리' },
+                            { value: AccountType.SOLE_PROPRIETOR, label: '개인사업자', desc: '자영업, 소상공인 사업용' },
+                            { value: AccountType.CORPORATION, label: '법인사업자', desc: '법인 회사 사업용' },
+                        ].map(opt => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => setAccountType(opt.value)}
+                                className={`p-4 rounded-lg border-2 text-left transition-all ${
+                                    accountType === opt.value
+                                        ? 'border-brand-primary bg-blue-50 shadow-md'
+                                        : 'border-border-color bg-surface-card hover:border-brand-accent'
+                                }`}
+                            >
+                                <div className={`font-bold text-base ${accountType === opt.value ? 'text-brand-primary' : 'text-text-primary'}`}>{opt.label}</div>
+                                <div className="text-xs text-text-muted mt-1">{opt.desc}</div>
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                {/* Step 2: 추가 정보 (접이식) */}
+                {/* Step 1: 기본 정보 */}
+                <div className="p-5 bg-surface-subtle rounded-lg border border-border-color space-y-4">
+                    <h3 className="text-lg font-semibold text-brand-primary">
+                        📋 {accountType === AccountType.PERSONAL ? '기본 정보 입력 (필수)' : '사업 정보 입력 (필수)'}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="name" className="block text-sm font-medium text-text-muted mb-1">
+                                {accountType === AccountType.PERSONAL ? '이름 (별칭)' : '상호명'}
+                            </label>
+                            <input type="text" name="name" id="name" value={businessInfo.name} onChange={handleInfoChange} className="w-full bg-background-main border border-border-color rounded-md px-3 py-2 focus:ring-brand-primary focus:border-brand-primary text-text-primary" autoComplete="off" placeholder={accountType === AccountType.PERSONAL ? '예: 홍길동' : '예: 토담옛날통닭'}/>
+                        </div>
+                        <div>
+                            <label htmlFor="owner" className="block text-sm font-medium text-text-muted mb-1">
+                                {accountType === AccountType.PERSONAL ? '메모 (선택)' : '대표자명'}
+                            </label>
+                            <input type="text" name="owner" id="owner" value={businessInfo.owner} onChange={handleInfoChange} className="w-full bg-background-main border border-border-color rounded-md px-3 py-2 focus:ring-brand-primary focus:border-brand-primary text-text-primary" autoComplete="off" placeholder={accountType === AccountType.PERSONAL ? '예: 생활비 통장' : '예: 홍길동'}/>
+                        </div>
+                        {accountType !== AccountType.PERSONAL && (
+                          <>
+                            <div>
+                                <label htmlFor="type" className="block text-sm font-medium text-text-muted mb-1">업종 선택 (선택하면 자동 채움)</label>
+                                <select name="type" id="type" value={businessInfo.type} onChange={handleInfoChange} className="w-full bg-background-main border border-border-color rounded-md px-3 py-2 focus:ring-brand-primary focus:border-brand-primary text-text-primary">
+                                    {Object.values(BusinessType).map(type => (
+                                        <option key={type} value={type}>{type}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label htmlFor="items" className="block text-sm font-medium text-text-muted mb-1">주요 취급 품목 (쉼표로 구분)</label>
+                                <input type="text" name="items" id="items" value={businessInfo.items} onChange={handleInfoChange} className="w-full bg-background-main border border-border-color rounded-md px-3 py-2 focus:ring-brand-primary focus:border-brand-primary text-text-primary" autoComplete="off" placeholder="예: 후라이드 치킨, 양념 치킨"/>
+                            </div>
+                          </>
+                        )}
+                    </div>
+                </div>
+
+                {/* Step 2: 추가 정보 (접이식) - 사업자만 표시 */}
+                {accountType !== AccountType.PERSONAL && (
                 <div className="p-5 bg-surface-subtle rounded-lg border border-border-color">
-                    <button 
+                    <button
                         onClick={() => setShowAdvanced(!showAdvanced)}
                         className="w-full flex items-center justify-between text-left"
                     >
@@ -335,6 +379,7 @@ const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack, savedSession,
                         </div>
                     )}
                 </div>
+                )}
 
                 {/* Step 3: 파일 업로드 */}
                 <div className="p-5 bg-surface-subtle rounded-lg border border-border-color space-y-4">
@@ -363,7 +408,7 @@ const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack, savedSession,
                                                 placeholder="분석용 제목 (예: 신한은행 1분기)"
                                             />
                                         </div>
-                                        <button onClick={() => handleRemoveFile(index)} className="text-red-400 hover:text-red-300 p-1" title="삭제">
+                                        <button onClick={() => handleRemoveFile(index)} className="text-red-600 hover:text-red-700 p-1" title="삭제">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                         </button>
                                     </div>
@@ -375,7 +420,7 @@ const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack, savedSession,
             </div>
 
             {error && (
-                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
                     {error}
                 </div>
             )}
@@ -384,7 +429,7 @@ const SetupScreen: React.FC<Props> = ({ onDataProcessed, onGoBack, savedSession,
                 <button
                     onClick={processData}
                     disabled={isLoading}
-                    className="w-full md:w-auto inline-flex items-center justify-center px-12 py-4 bg-brand-primary hover:bg-brand-secondary text-text-on-light font-bold rounded-lg shadow-lg transition-transform transform hover:scale-105 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed"
+                    className="w-full md:w-auto inline-flex items-center justify-center px-12 py-4 bg-brand-primary hover:bg-brand-secondary text-text-on-light font-bold rounded-lg shadow-lg transition-transform transform hover:scale-105 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
                 >
                     {isLoading ? (
                         <>

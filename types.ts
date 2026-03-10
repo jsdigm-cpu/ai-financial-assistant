@@ -14,6 +14,7 @@ export interface BusinessInfo {
   owner: string;
   type: string;
   items: string;
+  accountType?: string;
   address?: string;
   rawMaterialSuppliers?: string;
   subsidiaryMaterialSuppliers?: string;
@@ -38,6 +39,12 @@ export enum BusinessType {
   SERVICE_Hospital = "서비스업 - 병원/의원",
   MANUFACTURING = "제조업",
   ETC = "기타",
+}
+
+export enum AccountType {
+  PERSONAL = "개인통장",
+  SOLE_PROPRIETOR = "개인사업자",
+  CORPORATION = "법인사업자",
 }
 
 export interface ProcessedData {

@@ -34,16 +34,16 @@ const IncomeExpenseChart: React.FC<Props> = ({ data }) => {
     <div className="w-full h-[350px]">
         <ResponsiveContainer>
           <ComposedChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#233554" />
-            <XAxis dataKey="name" stroke="#8892b0" fontSize={12} />
-            <YAxis tickFormatter={formatCurrencyCompact} stroke="#8892b0" fontSize={12} />
-            <Tooltip 
+            <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" />
+            <XAxis dataKey="name" stroke="#6B7280" fontSize={12} />
+            <YAxis tickFormatter={formatCurrencyCompact} stroke="#6B7280" fontSize={12} />
+            <Tooltip
               formatter={(value: number) => [`${value.toLocaleString('ko-KR')}원`, '']}
-              contentStyle={{ backgroundColor: '#172a45', border: '1px solid #233554', borderRadius: '0.5rem' }}
-              labelStyle={{ color: '#ccd6f6', fontWeight: 'bold' }}
-              itemStyle={{ color: '#ccd6f6' }}
+              contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '0.5rem' }}
+              labelStyle={{ color: '#1F2937', fontWeight: 'bold' }}
+              itemStyle={{ color: '#1F2937' }}
             />
-            <Legend wrapperStyle={{ color: '#ccd6f6' }} />
+            <Legend wrapperStyle={{ color: '#374151' }} />
             <Bar dataKey="사업매출" fill="#10B981" barSize={20} />
             <Bar dataKey="사업비용" fill="#EF4444" barSize={20} />
             <Line type="monotone" dataKey="사업순손익" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />

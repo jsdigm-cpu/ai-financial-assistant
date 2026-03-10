@@ -20,12 +20,13 @@ const ManagedCategoryItem: React.FC<{
     // D&D Props
     isDraggedOver: boolean;
     onDragStart: () => void;
+    onDragEnd: () => void;
     onDrop: (e: React.DragEvent) => void;
     onDragOver: (e: React.DragEvent) => void;
     onDragEnter: () => void;
     onDragLeave: () => void;
 }> = (props) => {
-    const { category, rules, transactionCount, maxTransactionCount, isRenamable, isDeletable, isSelected, onSelect, onRename, onDelete, onAddRule, onDeleteRule, isDraggedOver, onDragStart, onDrop, onDragOver, onDragEnter, onDragLeave } = props;
+    const { category, rules, transactionCount, maxTransactionCount, isRenamable, isDeletable, isSelected, onSelect, onRename, onDelete, onAddRule, onDeleteRule, isDraggedOver, onDragStart, onDragEnd, onDrop, onDragOver, onDragEnter, onDragLeave } = props;
     const [isRenaming, setIsRenaming] = useState(false);
     const [draftName, setDraftName] = useState(category.name);
     const [newKeyword, setNewKeyword] = useState('');
@@ -68,16 +69,16 @@ const ManagedCategoryItem: React.FC<{
             onDragOver={onDragOver}
             onDragEnter={onDragEnter}
             onDragLeave={onDragLeave}
-            className={`bg-surface-card border rounded-lg transition-all ${isSelected ? 'ring-2 ring-brand-primary shadow-md border-transparent' : 'border-border-color hover:border-slate-300'} ${isDraggedOver ? 'ring-2 ring-brand-accent border-transparent' : ''}`}
+            className={`bg-surface-card border rounded-lg transition-all ${isSelected ? 'ring-2 ring-brand-primary shadow-md border-transparent' : 'border-border-color hover:border-slate-300'} ${isDraggedOver ? 'ring-2 ring-brand-accent border-transparent bg-cyan-50 shadow-lg scale-[1.02]' : ''}`}
         >
             <div
                 className='p-2.5 flex justify-between items-center'
             >
                 <div className="flex items-center gap-3 flex-grow min-w-0">
-                    {/* FIX: Wrapped SVG in a div and moved drag-related props to fix TS error, as 'draggable' is not a valid SVG attribute in React. */}
                     <div
                         draggable={isRenamable}
                         onDragStart={(e) => { e.stopPropagation(); onDragStart(); }}
+                        onDragEnd={(e) => { e.stopPropagation(); onDragEnd(); }}
                         onClick={(e) => e.stopPropagation()}
                         className={`flex-shrink-0 ${!isRenamable ? 'opacity-30 cursor-not-allowed' : 'cursor-grab'}`}
                     >
@@ -138,7 +139,7 @@ const ManagedCategoryItem: React.FC<{
                                 onClick={(e) => { e.stopPropagation(); if (!isSelected) onSelect(category.name); setIsRenaming(true); }}
                                 title={isRenamable ? "이름 수정" : "기본 카테고리는 이름을 바꿀 수 없습니다."} 
                                 disabled={!isRenamable} 
-                                className="text-gray-400 hover:text-blue-500 p-1 rounded-full hover:bg-surface-subtle disabled:opacity-30 disabled:cursor-not-allowed"
+                                className="text-slate-400 hover:text-blue-600 p-1 rounded-full hover:bg-surface-subtle disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>
                             </button>
@@ -146,7 +147,7 @@ const ManagedCategoryItem: React.FC<{
                                 onClick={(e) => { e.stopPropagation(); setIsConfirmingDelete(true); }}
                                 title={isDeletable ? "삭제" : "기본 카테고리는 삭제할 수 없습니다."} 
                                 disabled={!isDeletable}
-                                className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-500/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                                className="text-slate-400 hover:text-red-600 p-1 rounded-full hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
@@ -220,6 +221,7 @@ const CategorizedItemsList: React.FC<{
     
     const handleDragStart = (e: React.DragEvent, description: string) => {
         e.dataTransfer.setData("text/plain", description);
+        e.dataTransfer.setData("application/x-description-drag", description);
         e.dataTransfer.effectAllowed = 'copy';
     };
 
@@ -280,13 +282,14 @@ interface CategorySectionProps {
     draggedItem: Category | null;
     dropTarget: string | null;
     onDragStart: (category: Category) => void;
+    onDragEnd: () => void;
     onDrop: (targetCategory: Category) => void;
     onDragEnter: (categoryName: string) => void;
     onDragLeave: () => void;
 }
 
 const CategorySection: React.FC<CategorySectionProps> = (props) => {
-    const { title, type, categories, rules, transactionCounts, maxTransactionCount, selectedCategory, onSelectCategory, onAddCategory, onDeleteCategory, onRenameCategory, onAddRule, onDeleteRule, draggedItem, dropTarget, onDragStart, onDrop, onDragEnter, onDragLeave } = props;
+    const { title, type, categories, rules, transactionCounts, maxTransactionCount, selectedCategory, onSelectCategory, onAddCategory, onDeleteCategory, onRenameCategory, onAddRule, onDeleteRule, draggedItem, dropTarget, onDragStart, onDragEnd, onDrop, onDragEnter, onDragLeave } = props;
     const [newCategoryName, setNewCategoryName] = useState('');
     
     const handleRename = (oldName: string, newName: string) => {
@@ -343,17 +346,20 @@ const CategorySection: React.FC<CategorySectionProps> = (props) => {
                                 // D&D Props
                                 isDraggedOver={dropTarget === cat.name && draggedItem?.name !== cat.name}
                                 onDragStart={() => onDragStart(cat)}
+                                onDragEnd={onDragEnd}
                                 onDrop={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                            
-                                    if (draggedItem) { // Reordering category
+
+                                    // Check if this is a description drag (from right panel)
+                                    const descriptionData = e.dataTransfer.getData("application/x-description-drag");
+
+                                    if (descriptionData) {
+                                        // Re-assigning description to this category
+                                        onAddRule({ keyword: descriptionData, category: cat.name, source: 'manual' });
+                                    } else if (draggedItem) {
+                                        // Reordering category
                                         onDrop(cat);
-                                    } else { // Re-assigning description
-                                        const keyword = e.dataTransfer.getData("text/plain");
-                                        if (keyword) {
-                                            onAddRule({ keyword, category: cat.name, source: 'manual' });
-                                        }
                                     }
                                     onDragLeave(); // Reset indicator
                                 }}
@@ -449,6 +455,11 @@ const CategoryManagementView: React.FC<Props> = (props) => {
         setDraggedItem(category);
     };
 
+    const handleDragEnd = () => {
+        setDraggedItem(null);
+        setDropTarget(null);
+    };
+
     const handleDrop = (targetCategory: Category) => {
         if (draggedItem && draggedItem.name !== targetCategory.name && draggedItem.type === targetCategory.type) {
             props.onMoveCategory(draggedItem.name, targetCategory.name);
@@ -485,6 +496,7 @@ const CategoryManagementView: React.FC<Props> = (props) => {
         draggedItem,
         dropTarget,
         onDragStart: handleDragStart,
+        onDragEnd: handleDragEnd,
         onDrop: handleDrop,
         onDragEnter: handleDragEnter,
         onDragLeave: handleDragLeave,

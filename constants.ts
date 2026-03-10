@@ -115,6 +115,105 @@ export const NON_MODIFIABLE_CATEGORIES = [
   '기타출금',
 ];
 
+// ============================================================
+// 통장 구분별 기본 카테고리 프리셋
+// ============================================================
+
+// ▶ 개인통장용 카테고리
+const pInc = (name: string): Category => ({
+  name, level1: '수입', level2: '영업 수익', costGroup: null, type: 'operating_income'
+});
+const pIncNon = (name: string): Category => ({
+  name, level1: '수입', level2: '영업외 수익', costGroup: null, type: 'non_operating_income'
+});
+const pExp = (name: string): Category => ({
+  name, level1: '지출', level2: '영업 비용', costGroup: null, type: 'operating_expense'
+});
+const pExpNon = (name: string): Category => ({
+  name, level1: '지출', level2: '사업외 지출', costGroup: null, type: 'non_operating_expense'
+});
+
+export const PERSONAL_CATEGORIES: Category[] = [
+  pInc('급여·용돈'),
+  pInc('부업·알바수입'),
+  pInc('기타매출'),
+  pIncNon('이자수익'),
+  pIncNon('환급금'),
+  pIncNon('기타수입'),
+  pExp('식비'),
+  pExp('교통비'),
+  pExp('통신비'),
+  pExp('생활용품'),
+  pExp('의류·미용'),
+  pExp('문화·여가'),
+  pExp('교육비'),
+  pExp('의료비'),
+  pExp('보험료'),
+  pExp('공과금'),
+  pExp('기타사업비'),
+  pExpNon('주거비(월세·관리비)'),
+  pExpNon('대출상환'),
+  pExpNon('저축·투자'),
+  pExpNon('경조사비'),
+  pExpNon('기타출금'),
+];
+
+// ▶ 법인사업자용 카테고리
+const cInc = (name: string): Category => ({
+  name, level1: '수입', level2: '영업 수익', costGroup: null, type: 'operating_income'
+});
+const cIncNon = (name: string): Category => ({
+  name, level1: '수입', level2: '영업외 수익', costGroup: null, type: 'non_operating_income'
+});
+const cExp = (name: string, costGroup: CostGroup): Category => ({
+  name, level1: '지출', level2: '영업 비용', costGroup, type: 'operating_expense'
+});
+const cExpNon = (name: string): Category => ({
+  name, level1: '지출', level2: '사업외 지출', costGroup: null, type: 'non_operating_expense'
+});
+
+export const CORPORATION_CATEGORIES: Category[] = [
+  cInc('매출'),
+  cInc('용역매출'),
+  cInc('기타매출'),
+  cIncNon('이자수익'),
+  cIncNon('배당금수익'),
+  cIncNon('유형자산처분이익'),
+  cIncNon('기타수입'),
+  cExp('매출원가', '재료비'),
+  cExp('급여', '인건비'),
+  cExp('퇴직급여', '인건비'),
+  cExp('복리후생비', '인건비'),
+  cExp('임차료', '고정비'),
+  cExp('접대비', '변동비'),
+  cExp('감가상각비', '고정비'),
+  cExp('통신비', '고정비'),
+  cExp('수도광열비', '고정비'),
+  cExp('세금과공과', '변동비'),
+  cExp('보험료', '고정비'),
+  cExp('광고선전비', '변동비'),
+  cExp('운반비', '변동비'),
+  cExp('소모품비', '변동비'),
+  cExp('수선비', '변동비'),
+  cExp('차량유지비', '변동비'),
+  cExp('여비교통비', '변동비'),
+  cExp('기타사업비', '변동비'),
+  cExpNon('이자비용'),
+  cExpNon('유형자산처분손실'),
+  cExpNon('법인세비용'),
+  cExpNon('기타출금'),
+];
+
+// 통장 구분에 따른 기본 카테고리 반환
+export function getDefaultCategoriesByAccountType(accountType?: string): Category[] {
+  switch (accountType) {
+    case '개인통장': return PERSONAL_CATEGORIES;
+    case '법인사업자': return CORPORATION_CATEGORIES;
+    case '개인사업자':
+    default: return DEFAULT_CATEGORIES;
+  }
+}
+
 // 카테고리 이름으로 Category 객체를 찾는 맵
 export const CATEGORY_MAP: Record<string, Category> = {};
 DEFAULT_CATEGORIES.forEach(c => { CATEGORY_MAP[c.name] = c; });

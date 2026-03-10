@@ -110,7 +110,7 @@ const IncomeStatementAnalysis: React.FC<{ transactions: Transaction[], categorie
     const MetricRow: React.FC<{ label: string; value: number; isSub?: boolean; isTotal?: boolean; isPositive?: boolean; }> = ({ label, value, isSub = false, isTotal = false, isPositive = false }) => (
         <tr className={`border-b border-border-color ${isTotal ? 'bg-surface-subtle' : ''}`}>
             <td className={`py-2.5 px-4 font-semibold ${isSub ? 'pl-8' : ''} ${isTotal ? 'text-text-primary' : 'text-text-muted'}`}>{label}</td>
-            <td className={`py-2.5 px-4 text-right font-mono ${isTotal ? 'font-bold text-lg' : ''} ${value < 0 ? 'text-red-500' : isPositive ? 'text-green-500' : 'text-text-primary'}`}>
+            <td className={`py-2.5 px-4 text-right font-mono ${isTotal ? 'font-bold text-lg' : ''} ${value < 0 ? 'text-red-600' : isPositive ? 'text-green-600' : 'text-text-primary'}`}>
                 {formatCurrency(value)}
             </td>
         </tr>
@@ -300,15 +300,15 @@ const FixedVariableCostAnalysis: React.FC<{ transactions: Transaction[], categor
                                         <Cell key="cell-0" fill="#3B82F6" />
                                         <Cell key="cell-1" fill="#F59E0B" />
                                     </Pie>
-                                    <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}/>
-                                    <Legend wrapperStyle={{ color: '#ccd6f6' }} />
+                                    <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB' }}/>
+                                    <Legend wrapperStyle={{ color: '#374151' }} />
                                 </PieChart>
                             </ResponsiveContainer>
                         </div>
                         <div className="space-y-3">
                             <h4 className="font-semibold text-lg text-text-primary text-center">총 영업비용: {formatCurrency(total, true)}</h4>
-                            <DetailList title="고정비" details={fixedDetails} total={pieData[0]?.value || 0} colorClass="text-blue-300" bgColorClass="bg-blue-500/10" />
-                            <DetailList title="변동비" details={variableDetails} total={pieData[1]?.value || 0} colorClass="text-amber-300" bgColorClass="bg-amber-500/10" />
+                            <DetailList title="고정비" details={fixedDetails} total={pieData[0]?.value || 0} colorClass="text-blue-600" bgColorClass="bg-blue-50" />
+                            <DetailList title="변동비" details={variableDetails} total={pieData[1]?.value || 0} colorClass="text-amber-600" bgColorClass="bg-amber-50" />
                         </div>
                     </>
                 ) : (
@@ -388,9 +388,9 @@ const CashFlowAnalysis: React.FC<{ transactions: Transaction[], periodBadge?: Re
                             <tr key={d.month} className="border-b border-border-color">
                                 <td className="py-2 px-3">{d.month}</td>
                                 <td className="py-2 px-3 text-right text-text-muted">{formatCurrency(d.openingBalance)}</td>
-                                <td className="py-2 px-3 text-right text-green-500">{formatCurrency(d.inflow)}</td>
-                                <td className="py-2 px-3 text-right text-red-500">{formatCurrency(d.outflow)}</td>
-                                <td className={`py-2 px-3 text-right font-semibold ${d.netFlow >= 0 ? 'text-blue-500' : 'text-red-500'}`}>{formatCurrency(d.netFlow)}</td>
+                                <td className="py-2 px-3 text-right text-green-600">{formatCurrency(d.inflow)}</td>
+                                <td className="py-2 px-3 text-right text-red-600">{formatCurrency(d.outflow)}</td>
+                                <td className={`py-2 px-3 text-right font-semibold ${d.netFlow >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{formatCurrency(d.netFlow)}</td>
                                 <td className="py-2 px-3 text-right font-bold text-text-primary">{formatCurrency(d.closingBalance)}</td>
                             </tr>
                         ))}
@@ -449,10 +449,10 @@ const VendorCustomerAnalysis: React.FC<{ transactions: Transaction[], periodBadg
                 <div style={{ width: '100%', height: 300 }}>
                     <ResponsiveContainer>
                         <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }} layout="vertical">
-                            <CartesianGrid strokeDasharray="3 3" stroke="#233554" />
-                            <XAxis type="number" tickFormatter={(v) => formatCurrency(v, true)} tick={{ fontSize: 12, fill: '#8892b0' }}/>
-                            <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 10, fill: '#8892b0' }} interval={0} />
-                            <Tooltip formatter={(value: number) => [formatCurrency(value), `(${(value/total*100).toFixed(1)}%)`]} contentStyle={{ backgroundColor: '#172a45', border: '1px solid #233554', borderRadius: '0.5rem' }}/>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" />
+                            <XAxis type="number" tickFormatter={(v) => formatCurrency(v, true)} tick={{ fontSize: 12, fill: '#6B7280' }}/>
+                            <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 10, fill: '#6B7280' }} interval={0} />
+                            <Tooltip formatter={(value: number) => [formatCurrency(value), `(${(value/total*100).toFixed(1)}%)`]} contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '0.5rem' }}/>
                             <Bar dataKey="value" fill={color} barSize={15} />
                         </BarChart>
                     </ResponsiveContainer>

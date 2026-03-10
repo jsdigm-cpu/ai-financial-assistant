@@ -33,13 +33,13 @@ const AIReportGenerator: React.FC<Props> = ({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-surface-subtle p-4 rounded-lg border border-border-color">
-              <h5 className="font-semibold text-green-400 mb-2">✅ 긍정적 측면</h5>
+              <h5 className="font-semibold text-green-600 mb-2">✅ 긍정적 측면</h5>
               <ul className="list-disc list-inside space-y-1 text-sm text-text-muted">
                   {report.positivePoints.map((point, i) => <li key={i}>{point}</li>)}
               </ul>
           </div>
             <div className="bg-surface-subtle p-4 rounded-lg border border-border-color">
-              <h5 className="font-semibold text-yellow-400 mb-2">⚠️ 개선 필요 영역</h5>
+              <h5 className="font-semibold text-yellow-600 mb-2">⚠️ 개선 필요 영역</h5>
               <ul className="list-disc list-inside space-y-1 text-sm text-text-muted">
                   {report.areasForImprovement.map((point, i) => <li key={i}>{point}</li>)}
               </ul>
@@ -83,10 +83,10 @@ const AIReportGenerator: React.FC<Props> = ({
               <h4 className="text-xl font-bold text-text-primary mb-3 border-b-2 border-border-color pb-2">전략적 제안</h4>
               <div className="space-y-4">
                   {report.strategicRecommendations.map((item, i) => (
-                      <div key={i} className="bg-blue-500/10 border-l-4 border-blue-400 p-4 rounded-r-lg">
-                          <h5 className="font-semibold text-blue-300">{item.title}</h5>
-                          <p className="text-sm text-blue-300 mt-1">{item.description}</p>
-                          <p className="text-xs text-blue-400 mt-2 font-medium"><strong>기대 효과:</strong> {item.expectedImpact}</p>
+                      <div key={i} className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                          <h5 className="font-semibold text-blue-600">{item.title}</h5>
+                          <p className="text-sm text-blue-600 mt-1">{item.description}</p>
+                          <p className="text-xs text-blue-500 mt-2 font-medium"><strong>기대 효과:</strong> {item.expectedImpact}</p>
                       </div>
                   ))}
               </div>
@@ -95,9 +95,9 @@ const AIReportGenerator: React.FC<Props> = ({
               <h4 className="text-xl font-bold text-text-primary mb-3 border-b-2 border-border-color pb-2">리스크 평가 및 관리 방안</h4>
                <div className="space-y-4">
                   {report.riskAssessment.map((item, i) => (
-                      <div key={i} className="bg-red-500/10 border-l-4 border-red-400 p-4 rounded-r-lg">
-                           <h5 className="font-semibold text-red-300">🚨 {item.risk}</h5>
-                          <p className="text-sm text-red-400 mt-2"><strong>완화 방안:</strong> {item.mitigation}</p>
+                      <div key={i} className="bg-red-50 border-l-4 border-red-200 p-4 rounded-r-lg">
+                           <h5 className="font-semibold text-red-600">🚨 {item.risk}</h5>
+                          <p className="text-sm text-red-600 mt-2"><strong>완화 방안:</strong> {item.mitigation}</p>
                       </div>
                   ))}
               </div>
@@ -120,7 +120,7 @@ const AIReportGenerator: React.FC<Props> = ({
         <button
           onClick={() => onGenerate(reportType)}
           disabled={currentStatus.isLoading}
-          className="mt-3 sm:mt-0 px-6 py-2 bg-brand-primary hover:bg-brand-secondary text-text-on-light font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:bg-slate-600 disabled:cursor-not-allowed flex items-center"
+          className="mt-3 sm:mt-0 px-6 py-2 bg-brand-primary hover:bg-brand-secondary text-text-on-light font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:bg-slate-200 disabled:cursor-not-allowed flex items-center"
         >
           {currentStatus.isLoading ? (
             <>
@@ -139,7 +139,7 @@ const AIReportGenerator: React.FC<Props> = ({
       </div>
 
       <div id="ai-report-content-to-export" className="text-text-primary">
-          {currentStatus.error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg my-4">{currentStatus.error}</div>}
+          {currentStatus.error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg my-4">{currentStatus.error}</div>}
 
           {!currentReport && !currentStatus.isLoading && (
             <div className="text-center py-8 text-text-muted">

@@ -91,11 +91,11 @@ const CategoryPieChart: React.FC<Props> = ({ data, type, categories }) => {
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip 
+            <Tooltip
               formatter={(value: number, name: string) => [`${value.toLocaleString('ko-KR')}원 (${((value/total) * 100).toFixed(1)}%)`, name]}
-              contentStyle={{ backgroundColor: '#172a45', border: '1px solid #233554', borderRadius: '0.5rem' }}
-              labelStyle={{ color: '#ccd6f6', fontWeight: 'bold' }}
-              itemStyle={{ color: '#ccd6f6' }}
+              contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '0.5rem' }}
+              labelStyle={{ color: '#1F2937', fontWeight: 'bold' }}
+              itemStyle={{ color: '#1F2937' }}
             />
           </PieChart>
         </ResponsiveContainer>

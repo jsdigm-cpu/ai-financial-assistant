@@ -72,16 +72,16 @@ const TopCategoriesChart: React.FC<Props> = ({ data, type }) => {
       <div style={{ width: '100%', height: 300 }}>
         <ResponsiveContainer>
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#233554" />
-            <XAxis dataKey="name" stroke="#8892b0" fontSize={12} />
-            <YAxis tickFormatter={formatCurrencyCompact} stroke="#8892b0" fontSize={12} />
-            <Tooltip 
+            <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" />
+            <XAxis dataKey="name" stroke="#6B7280" fontSize={12} />
+            <YAxis tickFormatter={formatCurrencyCompact} stroke="#6B7280" fontSize={12} />
+            <Tooltip
               formatter={(value: number, name: string) => [`${value.toLocaleString('ko-KR')}원`, name]}
-              contentStyle={{ backgroundColor: '#172a45', border: '1px solid #233554', borderRadius: '0.5rem' }}
-              labelStyle={{ color: '#ccd6f6', fontWeight: 'bold' }}
-              itemStyle={{ color: '#ccd6f6' }}
+              contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '0.5rem' }}
+              labelStyle={{ color: '#1F2937', fontWeight: 'bold' }}
+              itemStyle={{ color: '#1F2937' }}
             />
-            <Legend wrapperStyle={{ color: '#ccd6f6', fontSize: '12px' }} />
+            <Legend wrapperStyle={{ color: '#374151', fontSize: '12px' }} />
             {topCategories.map((cat, index) => (
               <Line key={cat} type="monotone" dataKey={cat} stroke={COLORS[index % COLORS.length]} strokeWidth={2} activeDot={{ r: 6 }} />
             ))}

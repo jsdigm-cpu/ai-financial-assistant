@@ -95,13 +95,13 @@ const LocationAnalysisGenerator: React.FC<Props> = ({ businessInfo, report, stat
     );
 
     const Marketing4PCard: React.FC<{ title: string; strategies: {title: string; description: string}[]; icon: React.ReactNode }> = ({ title, strategies, icon }) => (
-         <div className="bg-blue-500/10 border-l-4 border-blue-400 p-4 rounded-r-lg">
-            <h5 className="font-semibold text-blue-300 flex items-center gap-2">{icon} {title}</h5>
+         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+            <h5 className="font-semibold text-blue-600 flex items-center gap-2">{icon} {title}</h5>
             <div className="mt-2 space-y-3">
              {strategies.map((item, i) => (
                 <div key={i}>
-                    <p className="text-sm text-blue-300 font-semibold">{item.title}</p>
-                    <p className="text-xs text-blue-400 mt-1">{item.description}</p>
+                    <p className="text-sm text-blue-600 font-semibold">{item.title}</p>
+                    <p className="text-xs text-blue-500 mt-1">{item.description}</p>
                 </div>
              ))}
             </div>
@@ -116,10 +116,10 @@ const LocationAnalysisGenerator: React.FC<Props> = ({ businessInfo, report, stat
                 <span className="text-brand-primary">{businessInfo.name}</span> SWOT 분석
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <SWOTCard title="Strengths (강점)" items={report.swotAnalysis.strengths} color="text-green-400" icon={<span>💪</span>} />
-                  <SWOTCard title="Weaknesses (약점)" items={report.swotAnalysis.weaknesses} color="text-red-400" icon={<span>😥</span>} />
-                  <SWOTCard title="Opportunities (기회)" items={report.swotAnalysis.opportunities} color="text-blue-400" icon={<span>📈</span>} />
-                  <SWOTCard title="Threats (위협)" items={report.swotAnalysis.threats} color="text-yellow-400" icon={<span>⚠️</span>} />
+                  <SWOTCard title="Strengths (강점)" items={report.swotAnalysis.strengths} color="text-green-600" icon={<span>💪</span>} />
+                  <SWOTCard title="Weaknesses (약점)" items={report.swotAnalysis.weaknesses} color="text-red-600" icon={<span>😥</span>} />
+                  <SWOTCard title="Opportunities (기회)" items={report.swotAnalysis.opportunities} color="text-blue-600" icon={<span>📈</span>} />
+                  <SWOTCard title="Threats (위협)" items={report.swotAnalysis.threats} color="text-yellow-600" icon={<span>⚠️</span>} />
               </div>
           </div>
           
@@ -135,8 +135,8 @@ const LocationAnalysisGenerator: React.FC<Props> = ({ businessInfo, report, stat
                           <div className="mt-3 pt-3 border-t border-border-color">
                               <p className="text-sm text-text-muted mt-1 italic">"{item.description}"</p>
                               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                                  <div className="bg-green-500/10 p-2 rounded"><strong className="text-green-300">강점:</strong> {item.strength}</div>
-                                  <div className="bg-red-500/10 p-2 rounded"><strong className="text-red-300">약점:</strong> {item.weakness}</div>
+                                  <div className="bg-green-50 p-2 rounded"><strong className="text-green-600">강점:</strong> {item.strength}</div>
+                                  <div className="bg-red-50 p-2 rounded"><strong className="text-red-600">약점:</strong> {item.weakness}</div>
                               </div>
                           </div>
                       </details>
@@ -180,7 +180,7 @@ const LocationAnalysisGenerator: React.FC<Props> = ({ businessInfo, report, stat
         <button
           onClick={onGenerate}
           disabled={status.isLoading || isAddressMissing}
-          className="mt-3 sm:mt-0 px-6 py-2 bg-brand-primary hover:bg-brand-secondary text-text-on-light font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed flex items-center"
+          className="mt-3 sm:mt-0 px-6 py-2 bg-brand-primary hover:bg-brand-secondary text-text-on-light font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed flex items-center"
           title={isAddressMissing ? "상권 분석을 위해서는 사업장 주소가 필요합니다." : "AI 분석 리포트 생성"}
         >
           {status.isLoading ? (
@@ -200,7 +200,7 @@ const LocationAnalysisGenerator: React.FC<Props> = ({ businessInfo, report, stat
       </div>
 
       <div className="text-text-primary">
-          {status.error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg my-4">{status.error}</div>}
+          {status.error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg my-4">{status.error}</div>}
 
           {!report && !status.isLoading && (
             <div className="text-center py-8 text-text-muted">

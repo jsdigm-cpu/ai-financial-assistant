@@ -169,17 +169,17 @@ const TransactionsView: React.FC<Props> = ({ transactions, categories, onUpdateT
                  </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                <div className="bg-green-500/10 p-3 rounded-lg">
-                    <div className="text-sm font-semibold text-green-300">조회된 수입 합계</div>
-                    <div className="text-lg font-bold text-green-300">{summary.totalCredit.toLocaleString()}원</div>
+                <div className="bg-green-50 p-3 rounded-lg">
+                    <div className="text-sm font-semibold text-green-600">조회된 수입 합계</div>
+                    <div className="text-lg font-bold text-green-600">{summary.totalCredit.toLocaleString()}원</div>
                 </div>
-                <div className="bg-red-500/10 p-3 rounded-lg">
-                    <div className="text-sm font-semibold text-red-300">조회된 지출 합계</div>
-                    <div className="text-lg font-bold text-red-300">{summary.totalDebit.toLocaleString()}원</div>
+                <div className="bg-red-50 p-3 rounded-lg">
+                    <div className="text-sm font-semibold text-red-600">조회된 지출 합계</div>
+                    <div className="text-lg font-bold text-red-600">{summary.totalDebit.toLocaleString()}원</div>
                 </div>
-                 <div className={`${netSum >= 0 ? 'bg-blue-500/10' : 'bg-orange-500/10'} p-3 rounded-lg`}>
-                    <div className={`text-sm font-semibold ${netSum >= 0 ? 'text-blue-300' : 'text-orange-300'}`}>합계</div>
-                    <div className={`text-lg font-bold ${netSum >= 0 ? 'text-blue-300' : 'text-orange-300'}`}>{netSum.toLocaleString()}원</div>
+                 <div className={`${netSum >= 0 ? 'bg-blue-50' : 'bg-orange-50'} p-3 rounded-lg`}>
+                    <div className={`text-sm font-semibold ${netSum >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>합계</div>
+                    <div className={`text-lg font-bold ${netSum >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>{netSum.toLocaleString()}원</div>
                 </div>
             </div>
         </div>

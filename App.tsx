@@ -1,8 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { ProcessedData, UploadedFileInfo } from './types';
+import IntroScreen from './components/IntroScreen';
 import SetupScreen from './components/SetupScreen';
 import MainLayout from './components/MainLayout';
 import { BusinessInfo } from './types';
+
+type AppPhase = 'intro' | 'setup' | 'main';
 
 // ============================================================
 // 세션 저장/복원 키 및 유틸리티
@@ -38,6 +41,7 @@ function restoreTransactionDates(transactions: any[]): any[] {
 }
 
 const App: React.FC = () => {
+  const [phase, setPhase] = useState<AppPhase>('intro');
   const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
   const [businessInfo, setBusinessInfo] = useState<BusinessInfo | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFileInfo[] | null>(null);
@@ -63,13 +67,14 @@ const App: React.FC = () => {
     setUploadedFiles(files);
     setPreviousState(null);
     setSavedSession(null);
+    setPhase('main');
   }, []);
 
   // 이전 분석 불러오기
   const handleRestoreSession = useCallback(() => {
     if (!savedSession) return;
     const restoredTransactions = restoreTransactionDates(savedSession.transactions);
-    
+
     // 카테고리/규칙도 localStorage에 저장 (MainLayout이 이를 읽어옴)
     if ((savedSession as any).categories) {
       const userKey = `financial_dashboard_user_${savedSession.businessInfo.name}_${savedSession.businessInfo.owner}`;
@@ -78,7 +83,7 @@ const App: React.FC = () => {
         categoryRules: (savedSession as any).categoryRules || [],
       }));
     }
-    
+
     setProcessedData({
       transactions: restoredTransactions,
       errors: [],
@@ -86,6 +91,7 @@ const App: React.FC = () => {
     setBusinessInfo(savedSession.businessInfo);
     setUploadedFiles(savedSession.uploadedFiles);
     setSavedSession(null);
+    setPhase('main');
   }, [savedSession]);
 
   // JSON 파일에서 분석 데이터 불러오기
@@ -108,6 +114,7 @@ const App: React.FC = () => {
     setBusinessInfo(data.businessInfo);
     setUploadedFiles(data.uploadedFiles);
     setSavedSession(null);
+    setPhase('main');
   }, []);
   
   const handleReset = useCallback(() => {
@@ -115,6 +122,7 @@ const App: React.FC = () => {
     setProcessedData(null);
     setBusinessInfo(null);
     setUploadedFiles(null);
+    setPhase('setup');
     // 저장된 세션 다시 확인
     const session = getSavedSession();
     if (session) setSavedSession(session);
@@ -126,27 +134,52 @@ const App: React.FC = () => {
       setBusinessInfo(previousState.businessInfo);
       setUploadedFiles(previousState.uploadedFiles);
       setPreviousState(null);
+      setPhase('main');
     }
   }, [previousState]);
 
-  return (
-    <div className="min-h-screen bg-background-main font-sans">
-      {!processedData || !businessInfo || !uploadedFiles ? (
-        <SetupScreen 
-            onDataProcessed={handleDataProcessed} 
+  const renderPhase = () => {
+    switch (phase) {
+      case 'intro':
+        return (
+          <IntroScreen
+            onStart={() => setPhase('setup')}
+            hasSavedSession={!!savedSession}
+            onRestoreSession={handleRestoreSession}
+          />
+        );
+      case 'setup':
+        return (
+          <SetupScreen
+            onDataProcessed={handleDataProcessed}
             onGoBack={previousState ? handleGoBack : undefined}
             savedSession={savedSession}
             onRestoreSession={handleRestoreSession}
             onImportSession={handleImportSession}
-        />
-      ) : (
-        <MainLayout 
-          initialData={processedData} 
-          businessInfo={businessInfo} 
-          uploadedFiles={uploadedFiles}
-          onReset={handleReset} 
-        />
-      )}
+          />
+        );
+      case 'main':
+        if (processedData && businessInfo && uploadedFiles) {
+          return (
+            <MainLayout
+              initialData={processedData}
+              businessInfo={businessInfo}
+              uploadedFiles={uploadedFiles}
+              onReset={handleReset}
+            />
+          );
+        }
+        // 데이터 없으면 setup으로 fallback
+        setPhase('setup');
+        return null;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background-main font-sans">
+      {renderPhase()}
     </div>
   );
 };

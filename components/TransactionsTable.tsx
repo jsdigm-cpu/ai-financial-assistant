@@ -56,10 +56,10 @@ const TransactionsTable: React.FC<Props> = ({ transactions, categories, onUpdate
                 <tr key={tx.id} className="hover:bg-surface-subtle even:bg-surface-subtle">
                   <td className="px-6 py-1 whitespace-nowrap text-sm text-text-primary">{formatDate(tx.date)}</td>
                   <td className="px-6 py-1 whitespace-nowrap text-sm text-text-muted max-w-xs truncate" title={tx.description}>{tx.description}</td>
-                  <td className="px-6 py-1 whitespace-nowrap text-sm text-right text-red-500 font-medium">
+                  <td className="px-6 py-1 whitespace-nowrap text-sm text-right text-red-600 font-medium">
                     {tx.debit > 0 ? tx.debit.toLocaleString('ko-KR') : '-'}
                   </td>
-                  <td className="px-6 py-1 whitespace-nowrap text-sm text-right text-green-500 font-medium">
+                  <td className="px-6 py-1 whitespace-nowrap text-sm text-right text-green-600 font-medium">
                     {tx.credit > 0 ? tx.credit.toLocaleString('ko-KR') : '-'}
                   </td>
                   <td className="px-6 py-1 whitespace-nowrap text-sm">
