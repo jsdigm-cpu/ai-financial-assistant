@@ -144,6 +144,93 @@ const getPrintableStyles = () => `
 `;
 
 
+/**
+ * 화면에 렌더링된 실제 DOM 요소를 캡처하여 PDF로 변환
+ * - 차트, 그래프, 표를 포함한 전체 컨텐츠를 그대로 캡처
+ * - 섹션별로 나누어 페이지 넘김 처리
+ */
+export const exportViewToPdf = async (
+    contentElement: HTMLElement,
+    title: string,
+    businessName: string,
+    filename: string
+) => {
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const margin = 10;
+    const contentWidth = pdfWidth - 2 * margin;
+    const usableHeight = pdfHeight - 2 * margin;
+
+    // PDF 헤더 (텍스트로 직접 출력)
+    pdf.setFontSize(18);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(`${businessName} - ${title}`, pdfWidth / 2, margin + 8, { align: 'center' });
+    pdf.setFontSize(11);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(`보고서 생성일: ${new Date().toLocaleDateString('ko-KR')}`, pdfWidth / 2, margin + 15, { align: 'center' });
+    pdf.setDrawColor(51, 65, 85);
+    pdf.setLineWidth(0.5);
+    pdf.line(margin, margin + 18, pdfWidth - margin, margin + 18);
+
+    let currentY = margin + 22;
+
+    // 컨텐츠의 직접 자식 요소들을 각각의 섹션으로 처리
+    const sections = Array.from(contentElement.children).filter(
+        child => child instanceof HTMLElement
+    ) as HTMLElement[];
+
+    for (const section of sections) {
+        try {
+            const canvas = await html2canvas(section, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                windowWidth: contentElement.scrollWidth || 1200,
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const imgProps = pdf.getImageProperties(imgData);
+            const sectionHeight = (imgProps.height * contentWidth) / imgProps.width;
+
+            const remaining = usableHeight - (currentY - margin);
+
+            // 섹션이 남은 공간에 안 들어가면 새 페이지
+            if (sectionHeight > remaining && currentY > margin + 25) {
+                pdf.addPage();
+                currentY = margin;
+            }
+
+            if (sectionHeight > usableHeight) {
+                // 매우 긴 섹션 → 이미지 슬라이싱
+                let heightLeft = sectionHeight;
+                let position = currentY;
+
+                pdf.addImage(imgData, 'PNG', margin, position, contentWidth, sectionHeight);
+                heightLeft -= (usableHeight - (position - margin));
+
+                while (heightLeft > 0) {
+                    pdf.addPage();
+                    position = margin - (sectionHeight - heightLeft);
+                    pdf.addImage(imgData, 'PNG', margin, position, contentWidth, sectionHeight);
+                    heightLeft -= usableHeight;
+                }
+                currentY = margin + (sectionHeight % usableHeight || usableHeight);
+            } else {
+                // 정상 배치
+                pdf.addImage(imgData, 'PNG', margin, currentY, contentWidth, sectionHeight);
+                currentY += sectionHeight + 3;
+            }
+        } catch (err) {
+            console.error('섹션 캡처 오류:', err);
+        }
+    }
+
+    pdf.save(`${filename}.pdf`);
+};
+
+
 export const exportDashboardToPdf = (transactions: Transaction[], businessInfo: BusinessInfo, filename: string) => {
     const kpis = transactions.reduce((acc, t) => {
         acc.totalIncome += t.credit;

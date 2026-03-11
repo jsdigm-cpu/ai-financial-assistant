@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { Transaction, BusinessInfo, Category } from '../../types';
 import { CATEGORY_MAP, DEFAULT_CATEGORY_INCOME, DEFAULT_CATEGORY_EXPENSE } from '../../constants';
 import KPICard from '../KPICard';
 import IncomeExpenseChart from '../IncomeExpenseChart';
 import CategoryPieChart from '../CategoryPieChart';
 import TopCategoriesChart from '../TopCategoriesChart';
-import { exportDashboardToPdf } from '../../services/pdfExporter';
+import { exportViewToPdf } from '../../services/pdfExporter';
 
 interface Props {
   transactions: Transaction[];
@@ -74,6 +74,8 @@ function safeGetCostGroup(categoryName: string): string | null {
 
 const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories }) => {
   const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [isExporting, setIsExporting] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   const periodOptions = useMemo(() => getPeriodOptions(transactions), [transactions]);
   const periodLabel = getPeriodLabel(selectedPeriod);
   
@@ -207,8 +209,21 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
     }
   }, [filteredTransactions, categories]);
 
-  const handleExport = () => {
-    exportDashboardToPdf(transactions, businessInfo, `${businessInfo.name}_dashboard_report_${new Date().toISOString().slice(0,10)}`);
+  const handleExport = async () => {
+    if (!contentRef.current || isExporting) return;
+    setIsExporting(true);
+    try {
+      await exportViewToPdf(
+        contentRef.current,
+        '종합 대시보드',
+        businessInfo.name,
+        `${businessInfo.name}_dashboard_${new Date().toISOString().slice(0,10)}`
+      );
+    } catch (err) {
+      console.error('PDF 내보내기 오류:', err);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // P&L 테이블 컴포넌트들
@@ -277,13 +292,16 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
-          <button 
+          <button
             onClick={handleExport}
-            className="px-4 py-2 bg-brand-accent text-white font-semibold rounded-lg shadow-sm hover:bg-sky-400 transition-colors whitespace-nowrap"
-          >PDF 다운로드</button>
+            disabled={isExporting}
+            className="px-4 py-2 bg-brand-accent text-white font-semibold rounded-lg shadow-sm hover:bg-sky-400 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-wait"
+          >{isExporting ? 'PDF 생성 중...' : 'PDF 다운로드'}</button>
         </div>
       </div>
       
+      {/* PDF 캡처 영역 시작 */}
+      <div ref={contentRef} className="space-y-8">
       {/* KPI 카드 */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <KPICard title="사업 매출" value={kpiData.operatingRevenue} formatAsCurrency={true} />
@@ -385,6 +403,7 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
           <TopCategoriesChart data={operatingTransactions} type="operating_expense" />
         </div>
       </div>
+      </div>{/* PDF 캡처 영역 끝 */}
     </div>
   );
 };

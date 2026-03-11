@@ -1,7 +1,8 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Transaction, BusinessInfo, Category } from '../../types';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
 import { suggestFixedCostCategories } from '../../services/geminiService';
+import { exportViewToPdf } from '../../services/pdfExporter';
 
 
 const formatCurrency = (val: number | string, compact = false) => {
@@ -502,6 +503,8 @@ interface Props {
 const DeepDiveView: React.FC<Props> = ({ transactions, businessInfo, categories }) => {
     const [periodType, setPeriodType] = useState<'all' | 'year' | 'half' | 'quarter' | 'month'>('all');
     const [selectedValue, setSelectedValue] = useState<string>('all');
+    const [isExporting, setIsExporting] = useState(false);
+    const contentRef = useRef<HTMLDivElement>(null);
 
     const availablePeriods = useMemo(() => getAvailablePeriods(transactions), [transactions]);
     const categoryTypeMap = useMemo(() => new Map(categories.map(c => [c.name, c.type])), [categories]);
@@ -549,6 +552,24 @@ const DeepDiveView: React.FC<Props> = ({ transactions, businessInfo, categories 
         return availablePeriods[keyMap[periodType as keyof typeof keyMap]];
     }, [periodType, availablePeriods]);
 
+    const handleExportPdf = async () => {
+        if (!contentRef.current || isExporting) return;
+        setIsExporting(true);
+        try {
+            const periodSuffix = periodLabel.replace(/\s/g, '_');
+            await exportViewToPdf(
+                contentRef.current,
+                `심층 분석 (${periodLabel})`,
+                businessInfo.name,
+                `${businessInfo.name}_심층분석_${periodSuffix}_${new Date().toISOString().slice(0,10)}`
+            );
+        } catch (err) {
+            console.error('PDF 내보내기 오류:', err);
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     const PeriodButton: React.FC<{type: typeof periodType, label:string}> = ({type, label}) => (
         <button onClick={() => setPeriodType(type)} className={`px-3 py-1 text-sm font-semibold rounded-md ${periodType === type ? 'bg-brand-primary text-text-on-light shadow' : 'text-text-muted'}`}>{label}</button>
     );
@@ -592,13 +613,23 @@ const DeepDiveView: React.FC<Props> = ({ transactions, businessInfo, categories 
                             {periodOptions.map(p => <option key={p} value={p}>{p}</option>)}
                         </select>
                     )}
+                    <div className="ml-auto">
+                        <button
+                            onClick={handleExportPdf}
+                            disabled={isExporting}
+                            className="px-4 py-2 bg-brand-accent text-white font-semibold rounded-lg shadow-sm hover:bg-sky-400 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-wait"
+                        >{isExporting ? 'PDF 생성 중...' : 'PDF 다운로드'}</button>
+                    </div>
                 </div>
             </div>
 
-            <IncomeStatementAnalysis transactions={filteredTransactions} categories={categories} periodBadge={<PeriodBadge />} />
-            <FixedVariableCostAnalysis transactions={operatingExpenseTransactions} categories={categories} businessInfo={businessInfo} periodBadge={<PeriodBadge />} />
-            <CashFlowAnalysis transactions={filteredTransactions} periodBadge={<PeriodBadge />} />
-            <VendorCustomerAnalysis transactions={operatingTransactions} periodBadge={<PeriodBadge />} />
+            {/* PDF 캡처 영역 */}
+            <div ref={contentRef} className="space-y-8">
+                <IncomeStatementAnalysis transactions={filteredTransactions} categories={categories} periodBadge={<PeriodBadge />} />
+                <FixedVariableCostAnalysis transactions={operatingExpenseTransactions} categories={categories} businessInfo={businessInfo} periodBadge={<PeriodBadge />} />
+                <CashFlowAnalysis transactions={filteredTransactions} periodBadge={<PeriodBadge />} />
+                <VendorCustomerAnalysis transactions={operatingTransactions} periodBadge={<PeriodBadge />} />
+            </div>
         </div>
     );
 };

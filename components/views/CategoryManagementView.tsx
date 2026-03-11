@@ -202,7 +202,9 @@ const ManagedCategoryItem: React.FC<{
 const CategorizedItemsList: React.FC<{
     category: Category | null;
     transactions: Transaction[];
-}> = ({ category, transactions }) => {
+    onDescriptionDragStart?: (desc: string) => void;
+    onDescriptionDragEnd?: () => void;
+}> = ({ category, transactions, onDescriptionDragStart, onDescriptionDragEnd }) => {
     const categorizedItems = useMemo(() => {
         if (!category) return [];
         
@@ -221,9 +223,8 @@ const CategorizedItemsList: React.FC<{
     
     const handleDragStart = (e: React.DragEvent, description: string) => {
         e.dataTransfer.setData("text/plain", description);
-        e.dataTransfer.setData("application/x-description-drag", description);
         e.dataTransfer.effectAllowed = 'copyMove';
-        e.dataTransfer.dropEffect = 'copy';
+        onDescriptionDragStart?.(description);
     };
 
     if (!category) {
@@ -262,6 +263,7 @@ const CategorizedItemsList: React.FC<{
                         key={description}
                         draggable
                         onDragStart={(e) => handleDragStart(e, description)}
+                        onDragEnd={() => onDescriptionDragEnd?.()}
                         className="cursor-grab bg-surface-subtle p-2 px-3 rounded-md border border-border-color text-sm text-text-primary flex justify-between items-center hover:bg-blue-50 hover:border-blue-300 active:cursor-grabbing transition-colors"
                     >
                         <span className="truncate pr-2" title={description}>{description}</span>
@@ -302,10 +304,11 @@ interface CategorySectionProps {
     onDragEnter: (categoryName: string) => void;
     onDragLeave: () => void;
     onDragLeaveEvent: (e: React.DragEvent) => void;
+    draggedDescription: string | null;
 }
 
 const CategorySection: React.FC<CategorySectionProps> = (props) => {
-    const { title, type, categories, rules, transactionCounts, maxTransactionCount, selectedCategory, onSelectCategory, onAddCategory, onDeleteCategory, onRenameCategory, onAddRule, onDeleteRule, draggedItem, dropTarget, onDragStart, onDragEnd, onDrop, onDragEnter, onDragLeave, onDragLeaveEvent } = props;
+    const { title, type, categories, rules, transactionCounts, maxTransactionCount, selectedCategory, onSelectCategory, onAddCategory, onDeleteCategory, onRenameCategory, onAddRule, onDeleteRule, draggedItem, dropTarget, onDragStart, onDragEnd, onDrop, onDragEnter, onDragLeave, onDragLeaveEvent, draggedDescription } = props;
     const [newCategoryName, setNewCategoryName] = useState('');
     
     const handleRename = (oldName: string, newName: string) => {
@@ -367,18 +370,11 @@ const CategorySection: React.FC<CategorySectionProps> = (props) => {
                                     e.preventDefault();
                                     e.stopPropagation();
 
-                                    // Check if this is a description drag (from right panel)
-                                    const descriptionData = e.dataTransfer.getData("application/x-description-drag");
-                                    const plainTextData = e.dataTransfer.getData("text/plain");
-
-                                    if (descriptionData) {
-                                        // Re-assigning description to this category
-                                        onAddRule({ keyword: descriptionData, category: cat.name, source: 'manual' });
-                                    } else if (plainTextData && !draggedItem) {
-                                        // Fallback: plain text from description drag (some browsers don't preserve custom MIME)
-                                        onAddRule({ keyword: plainTextData, category: cat.name, source: 'manual' });
+                                    if (draggedDescription) {
+                                        // Description drag from right panel (React state 기반 - 브라우저 호환성 보장)
+                                        onAddRule({ keyword: draggedDescription, category: cat.name, source: 'manual' });
                                     } else if (draggedItem) {
-                                        // Reordering category
+                                        // Category reordering
                                         onDrop(cat);
                                     }
                                     onDragLeave();
@@ -387,10 +383,12 @@ const CategorySection: React.FC<CategorySectionProps> = (props) => {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     e.dataTransfer.dropEffect = draggedItem ? 'move' : 'copy';
-                                    onDragEnter(cat.name);
+                                    if (draggedItem || draggedDescription) {
+                                        onDragEnter(cat.name);
+                                    }
                                 }}
                                 onDragEnter={() => onDragEnter(cat.name)}
-                                onDragLeave={onDragLeave}
+                                onDragLeaveEvent={onDragLeaveEvent}
                             />
                         </div>
                     );
@@ -490,13 +488,15 @@ const CategoryManagementView: React.FC<Props> = (props) => {
         setDropTarget(null);
     };
 
+    const [draggedDescription, setDraggedDescription] = useState<string | null>(null);
+
     const handleDragEnter = (categoryName: string) => {
         if (draggedItem) {
             // Category reordering - only allow within same type
             if (props.categories.find(c => c.name === categoryName)?.type === draggedItem.type) {
                 setDropTarget(categoryName);
             }
-        } else {
+        } else if (draggedDescription) {
             // Description drag from right panel - allow drop on any category
             setDropTarget(categoryName);
         }
@@ -504,6 +504,7 @@ const CategoryManagementView: React.FC<Props> = (props) => {
 
     const handleDragLeave = () => {
         setDropTarget(null);
+        setDraggedDescription(null);
     };
 
     const handleDragLeaveEvent = (e: React.DragEvent) => {
@@ -534,6 +535,7 @@ const CategoryManagementView: React.FC<Props> = (props) => {
         onDragEnter: handleDragEnter,
         onDragLeave: handleDragLeave,
         onDragLeaveEvent: handleDragLeaveEvent,
+        draggedDescription,
     };
 
     return (
@@ -581,9 +583,11 @@ const CategoryManagementView: React.FC<Props> = (props) => {
                     </div>
                 </div>
                 <div className="sticky top-6">
-                   <CategorizedItemsList 
-                     category={selectedCategory} 
-                     transactions={props.transactions} 
+                   <CategorizedItemsList
+                     category={selectedCategory}
+                     transactions={props.transactions}
+                     onDescriptionDragStart={(desc) => setDraggedDescription(desc)}
+                     onDescriptionDragEnd={() => setDraggedDescription(null)}
                    />
                 </div>
             </div>
