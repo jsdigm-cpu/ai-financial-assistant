@@ -110,36 +110,36 @@ const getPrintableStyles = () => `
         * { box-sizing: border-box; }
         body { font-family: 'Noto Sans KR', sans-serif; color: #000000; line-height: 1.6; }
         .printable-container { width: 210mm; padding: 15mm; background-color: #ffffff; color: #000000; }
-        .header { text-align: center; border-bottom: 2px solid #CBD5E1; padding-bottom: 10px; margin-bottom: 20px; }
-        .header h1 { font-size: 24px; margin: 0; color: #000000; font-weight: 700; }
-        .header p { font-size: 14px; margin: 5px 0; color: #333333; }
-        .section { margin-bottom: 25px; background-color: #ffffff; }
-        .section-title { font-size: 18px; font-weight: 700; color: #1a56db; border-bottom: 2px solid #1a56db; padding-bottom: 5px; margin-bottom: 15px; }
-        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .kpi-card { border: 1px solid #CBD5E1; border-radius: 8px; padding: 15px; text-align: center; background-color: #F8FAFC; }
-        .kpi-card-title { font-size: 14px; color: #333333; margin-bottom: 5px; font-weight: 500; }
-        .kpi-card-value { font-size: 22px; font-weight: 700; color: #000000; }
-        .table { width: 100%; border-collapse: collapse; font-size: 12px; color: #000000; }
-        .table th, .table td { border: 1px solid #CBD5E1; padding: 10px; text-align: left; color: #000000; }
-        .table th { background-color: #EEF2FF; font-weight: 600; color: #1e293b; }
+        .header { text-align: center; border-bottom: 2px solid #CBD5E1; padding-bottom: 12px; margin-bottom: 24px; }
+        .header h1 { font-size: 28px; margin: 0; color: #000000; font-weight: 700; }
+        .header p { font-size: 16px; margin: 8px 0; color: #333333; }
+        .section { margin-bottom: 30px; background-color: #ffffff; }
+        .section-title { font-size: 22px; font-weight: 700; color: #1a56db; border-bottom: 2px solid #1a56db; padding-bottom: 8px; margin-bottom: 20px; }
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .kpi-card { border: 1px solid #CBD5E1; border-radius: 8px; padding: 20px; text-align: center; background-color: #F8FAFC; }
+        .kpi-card-title { font-size: 16px; color: #333333; margin-bottom: 8px; font-weight: 500; }
+        .kpi-card-value { font-size: 26px; font-weight: 700; color: #000000; }
+        .table { width: 100%; border-collapse: collapse; font-size: 14px; color: #000000; }
+        .table th, .table td { border: 1px solid #CBD5E1; padding: 12px; text-align: left; color: #000000; }
+        .table th { background-color: #EEF2FF; font-weight: 600; color: #1e293b; font-size: 15px; }
         .table td.right, .table th.right { text-align: right; }
         .text-green { color: #15803d !important; }
         .text-red { color: #dc2626 !important; }
         .text-blue { color: #1a56db !important; }
         .font-bold { font-weight: 700; }
-        .ai-summary { background-color: #F0F4FF; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; border-left: 4px solid #4338ca; color: #000000; }
-        .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .ai-section { border: 1px solid #CBD5E1; border-radius: 8px; padding: 15px; }
-        .ai-section-title { font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; color: #000000; }
-        .ai-list { list-style-position: inside; padding-left: 0; margin: 0; font-size: 13px; color: #000000; }
-        .ai-list li { margin-bottom: 8px; color: #000000; }
-        .ai-suggestion { border-left: 3px solid #4338ca; padding-left: 15px; margin-bottom: 15px; }
-        .ai-suggestion h5 { color: #000000; }
-        .ai-suggestion p { color: #1e293b; }
-        p { color: #000000; }
-        h5 { color: #000000; }
-        li { color: #000000; }
-        span { color: #000000; }
+        .ai-summary { background-color: #F0F4FF; padding: 20px; border-radius: 8px; margin-bottom: 24px; font-size: 16px; border-left: 5px solid #4338ca; color: #000000; line-height: 1.7; }
+        .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .ai-section { border: 1px solid #CBD5E1; border-radius: 8px; padding: 20px; }
+        .ai-section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: #000000; }
+        .ai-list { list-style-position: inside; padding-left: 0; margin: 0; font-size: 15px; color: #000000; line-height: 1.6; }
+        .ai-list li { margin-bottom: 10px; color: #000000; }
+        .ai-suggestion { border-left: 4px solid #4338ca; padding-left: 18px; margin-bottom: 20px; }
+        .ai-suggestion h5 { font-size: 17px; color: #000000; margin-bottom: 8px; }
+        .ai-suggestion p { font-size: 15px; color: #1e293b; line-height: 1.6; }
+        p { color: #000000; font-size: 15px; }
+        h5 { color: #000000; font-size: 17px; }
+        li { color: #000000; font-size: 15px; }
+        span { color: #000000; font-size: 15px; }
     </style>
 `;
 

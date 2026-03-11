@@ -229,7 +229,7 @@ const CategorizedItemsList: React.FC<{
 
     if (!category) {
         return (
-            <div className="bg-surface-card p-5 rounded-xl shadow-lg border border-border-color flex flex-col min-h-[70vh]">
+            <div className="bg-surface-card p-5 rounded-xl shadow-lg border border-border-color flex flex-col h-full min-h-[500px]">
                 <div className="border-b border-border-color pb-3 mb-4">
                     <h4 className="text-xl font-bold text-text-primary">항목 상세보기</h4>
                     <p className="text-sm text-text-muted mt-1">왼쪽 목록에서 카테고리를 클릭하면, 해당 항목에 분류된 거래 내역이 여기에 표시됩니다.</p>
@@ -248,7 +248,7 @@ const CategorizedItemsList: React.FC<{
     }
 
     return (
-        <div className="bg-surface-card p-5 rounded-xl shadow-lg border border-border-color flex flex-col min-h-[70vh]">
+        <div className="bg-surface-card p-5 rounded-xl shadow-lg border border-border-color flex flex-col h-full min-h-[500px]">
             <div className="border-b border-border-color pb-3 mb-4">
                 <h4 className="text-xl font-bold text-text-primary">항목 상세보기</h4>
                 <p className="text-sm text-text-muted mt-1">선택된 카테고리에 속한 거래 내역입니다. 항목을 드래그하여 왼쪽의 다른 카테고리에 놓으면 분류를 변경할 수 있습니다.</p>
@@ -370,7 +370,11 @@ const CategorySection: React.FC<CategorySectionProps> = (props) => {
                                     e.preventDefault();
                                     e.stopPropagation();
 
-                                    if (draggedDescription) {
+                                    const plainText = e.dataTransfer.getData("text/plain");
+
+                                    if (plainText) {
+                                        onAddRule({ keyword: plainText, category: cat.name, source: 'manual' });
+                                    } else if (draggedDescription) {
                                         // Description drag from right panel (React state 기반 - 브라우저 호환성 보장)
                                         onAddRule({ keyword: draggedDescription, category: cat.name, source: 'manual' });
                                     } else if (draggedItem) {
@@ -549,7 +553,7 @@ const CategoryManagementView: React.FC<Props> = (props) => {
                 </p>
             </div>
             
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-stretch">
                 <div className="space-y-8">
                      <div className="space-y-4">
                         <h3 className="text-2xl font-bold text-text-primary">수입</h3>
@@ -582,7 +586,7 @@ const CategoryManagementView: React.FC<Props> = (props) => {
                         />
                     </div>
                 </div>
-                <div className="sticky top-6">
+                <div className="h-full">
                    <CategorizedItemsList
                      category={selectedCategory}
                      transactions={props.transactions}
