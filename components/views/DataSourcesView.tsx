@@ -30,7 +30,7 @@ const DataSourcesView: React.FC<Props> = ({ businessInfo, uploadedFiles }) => {
     <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold text-text-inverted">분석 데이터 정보</h2>
-        <p className="mt-1 text-text-inverted-muted">현재 재무 분석에 사용되고 있는 사업 정보와 원본 데이터 파일 목록을 확인합니다.</p>
+        <p className="mt-1 text-text-inverted-muted">처음에 입력한 사업 정보와 업로드한 통장 파일 목록을 확인하는 화면입니다. 잘못된 정보가 있으면 '새 분석' 버튼을 눌러 다시 시작할 수 있습니다.</p>
       </div>
 
       <div className="bg-surface-card p-6 rounded-xl shadow-lg border border-border-color">

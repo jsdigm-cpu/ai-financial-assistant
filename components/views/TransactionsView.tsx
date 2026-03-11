@@ -125,7 +125,7 @@ const TransactionsView: React.FC<Props> = ({ transactions, categories, onUpdateT
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-2xl font-bold text-text-primary">거래 내역 상세 조회</h3>
-                <p className="mt-1 text-text-muted">모든 거래 내역을 기간, 금액, 카테고리별로 필터링하고 검색할 수 있습니다. 잘못 분류된 항목은 여기서 바로 수정하세요.</p>
+                <p className="mt-1 text-text-muted">통장에 찍힌 모든 입출금 내역을 하나씩 볼 수 있는 화면입니다. 날짜, 금액, 분류 항목별로 원하는 거래만 골라볼 수 있고, AI가 잘못 분류한 항목이 있으면 직접 클릭해서 바로잡을 수 있습니다. 엑셀 파일로도 내보낼 수 있습니다.</p>
               </div>
                 <button
                     onClick={handleExport}

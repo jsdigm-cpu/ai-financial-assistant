@@ -570,7 +570,7 @@ const DeepDiveView: React.FC<Props> = ({ transactions, businessInfo, categories 
         <div className="space-y-8">
              <div>
                 <h2 className="text-3xl font-bold text-text-inverted">심층 분석</h2>
-                <p className="mt-1 text-text-inverted-muted">손익계산서, 고정비/변동비 분석 등 전문적인 재무 분석 기법을 통해 비즈니스의 수익 구조를 다각도로 분석합니다.</p>
+                <p className="mt-1 text-text-inverted-muted">우리 사업이 실제로 얼마나 벌고, 어디에 돈이 나가는지 좀 더 자세히 파고드는 화면입니다. 손익계산서(수입-지출 요약표), 고정비(매달 고정 나가는 돈) vs 변동비(매출에 따라 달라지는 돈) 분석 등을 통해 사업 구조를 꼼꼼하게 점검할 수 있습니다.</p>
             </div>
             <div className="bg-surface-card p-4 rounded-xl shadow-lg border border-border-color">
                 <div className="flex flex-wrap items-center gap-4">

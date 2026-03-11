@@ -24,9 +24,9 @@ const ManagedCategoryItem: React.FC<{
     onDrop: (e: React.DragEvent) => void;
     onDragOver: (e: React.DragEvent) => void;
     onDragEnter: () => void;
-    onDragLeave: () => void;
+    onDragLeaveEvent: (e: React.DragEvent) => void;
 }> = (props) => {
-    const { category, rules, transactionCount, maxTransactionCount, isRenamable, isDeletable, isSelected, onSelect, onRename, onDelete, onAddRule, onDeleteRule, isDraggedOver, onDragStart, onDragEnd, onDrop, onDragOver, onDragEnter, onDragLeave } = props;
+    const { category, rules, transactionCount, maxTransactionCount, isRenamable, isDeletable, isSelected, onSelect, onRename, onDelete, onAddRule, onDeleteRule, isDraggedOver, onDragStart, onDragEnd, onDrop, onDragOver, onDragEnter, onDragLeaveEvent } = props;
     const [isRenaming, setIsRenaming] = useState(false);
     const [draftName, setDraftName] = useState(category.name);
     const [newKeyword, setNewKeyword] = useState('');
@@ -68,8 +68,8 @@ const ManagedCategoryItem: React.FC<{
             onDrop={onDrop}
             onDragOver={onDragOver}
             onDragEnter={onDragEnter}
-            onDragLeave={onDragLeave}
-            className={`bg-surface-card border rounded-lg transition-all ${isSelected ? 'ring-2 ring-brand-primary shadow-md border-transparent' : 'border-border-color hover:border-slate-300'} ${isDraggedOver ? 'ring-2 ring-brand-accent border-transparent bg-cyan-50 shadow-lg scale-[1.02]' : ''}`}
+            onDragLeave={onDragLeaveEvent}
+            className={`bg-surface-card border rounded-lg transition-all ${isSelected ? 'ring-2 ring-brand-primary shadow-md border-transparent' : 'border-border-color hover:border-slate-400'} ${isDraggedOver ? 'ring-2 ring-green-500 border-green-400 bg-green-50 shadow-lg scale-[1.02]' : ''}`}
         >
             <div
                 className='p-2.5 flex justify-between items-center'
@@ -222,39 +222,54 @@ const CategorizedItemsList: React.FC<{
     const handleDragStart = (e: React.DragEvent, description: string) => {
         e.dataTransfer.setData("text/plain", description);
         e.dataTransfer.setData("application/x-description-drag", description);
-        e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.effectAllowed = 'copyMove';
+        e.dataTransfer.dropEffect = 'copy';
     };
 
     if (!category) {
         return (
-            <div className="bg-surface-card p-4 rounded-xl shadow-lg border border-border-color h-full flex items-center justify-center min-h-[50vh]">
-                <div className="text-center text-text-muted">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg>
-                    <h4 className="text-lg font-semibold text-text-primary mt-2">항목 상세보기</h4>
-                    <p className="text-sm mt-1">왼쪽 목록에서 카테고리를 선택하여<br/>분류된 항목들을 확인하고 수정하세요.</p>
+            <div className="bg-surface-card p-5 rounded-xl shadow-lg border border-border-color flex flex-col min-h-[70vh]">
+                <div className="border-b border-border-color pb-3 mb-4">
+                    <h4 className="text-xl font-bold text-text-primary">항목 상세보기</h4>
+                    <p className="text-sm text-text-muted mt-1">왼쪽 목록에서 카테고리를 클릭하면, 해당 항목에 분류된 거래 내역이 여기에 표시됩니다.</p>
+                </div>
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center text-text-muted">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg>
+                        <p className="text-base font-semibold mt-3">카테고리를 선택해 주세요</p>
+                        <p className="text-sm mt-2 max-w-xs mx-auto leading-relaxed">
+                            잘못 분류된 거래 항목은 이곳에서 마우스로 끌어다가(드래그) 왼쪽의 올바른 카테고리에 놓으면(드롭) 자동으로 재분류됩니다.
+                        </p>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="bg-surface-card p-4 rounded-xl shadow-lg border border-border-color">
-            <h4 className="text-xl font-semibold text-text-primary mb-1 px-2">'{category.name}' 카테고리 항목 ({categorizedItems.length})</h4>
-            <p className="text-text-muted text-sm mb-4 px-2">잘못 분류된 항목이 있다면, 다른 카테고리로 드래그하여 바로잡으세요.</p>
-            <ul className="space-y-1 min-h-[30vh] max-h-[50vh] overflow-y-auto pr-2">
+        <div className="bg-surface-card p-5 rounded-xl shadow-lg border border-border-color flex flex-col min-h-[70vh]">
+            <div className="border-b border-border-color pb-3 mb-4">
+                <h4 className="text-xl font-bold text-text-primary">항목 상세보기</h4>
+                <p className="text-sm text-text-muted mt-1">선택된 카테고리에 속한 거래 내역입니다. 항목을 드래그하여 왼쪽의 다른 카테고리에 놓으면 분류를 변경할 수 있습니다.</p>
+            </div>
+            <div className="bg-brand-primary/5 border border-brand-primary/20 rounded-lg px-4 py-2 mb-3">
+                <span className="text-lg font-bold text-brand-primary">'{category.name}'</span>
+                <span className="text-sm text-text-muted ml-2">({categorizedItems.length}개 항목)</span>
+            </div>
+            <ul className="space-y-1 flex-1 overflow-y-auto pr-2">
                 {categorizedItems.map(([description, count]) => (
-                    <li 
+                    <li
                         key={description}
                         draggable
                         onDragStart={(e) => handleDragStart(e, description)}
-                        className="cursor-grab bg-surface-subtle p-1.5 px-3 rounded-md border border-border-color text-sm text-text-primary flex justify-between items-center hover:bg-border-color"
+                        className="cursor-grab bg-surface-subtle p-2 px-3 rounded-md border border-border-color text-sm text-text-primary flex justify-between items-center hover:bg-blue-50 hover:border-blue-300 active:cursor-grabbing transition-colors"
                     >
                         <span className="truncate pr-2" title={description}>{description}</span>
-                        <span className="flex-shrink-0 text-xs font-mono bg-border-color text-text-muted px-1.5 py-0.5 rounded-full">{count}</span>
+                        <span className="flex-shrink-0 text-xs font-mono bg-border-color text-text-muted px-2 py-0.5 rounded-full">{count}</span>
                     </li>
                 ))}
                 {categorizedItems.length === 0 && (
-                    <div className="flex items-center justify-center h-full min-h-[20vh] text-center text-text-muted">
+                    <div className="flex items-center justify-center flex-1 min-h-[20vh] text-center text-text-muted">
                         <p>이 카테고리로 분류된 항목이 없습니다.</p>
                     </div>
                 )}
@@ -286,10 +301,11 @@ interface CategorySectionProps {
     onDrop: (targetCategory: Category) => void;
     onDragEnter: (categoryName: string) => void;
     onDragLeave: () => void;
+    onDragLeaveEvent: (e: React.DragEvent) => void;
 }
 
 const CategorySection: React.FC<CategorySectionProps> = (props) => {
-    const { title, type, categories, rules, transactionCounts, maxTransactionCount, selectedCategory, onSelectCategory, onAddCategory, onDeleteCategory, onRenameCategory, onAddRule, onDeleteRule, draggedItem, dropTarget, onDragStart, onDragEnd, onDrop, onDragEnter, onDragLeave } = props;
+    const { title, type, categories, rules, transactionCounts, maxTransactionCount, selectedCategory, onSelectCategory, onAddCategory, onDeleteCategory, onRenameCategory, onAddRule, onDeleteRule, draggedItem, dropTarget, onDragStart, onDragEnd, onDrop, onDragEnter, onDragLeave, onDragLeaveEvent } = props;
     const [newCategoryName, setNewCategoryName] = useState('');
     
     const handleRename = (oldName: string, newName: string) => {
@@ -353,18 +369,24 @@ const CategorySection: React.FC<CategorySectionProps> = (props) => {
 
                                     // Check if this is a description drag (from right panel)
                                     const descriptionData = e.dataTransfer.getData("application/x-description-drag");
+                                    const plainTextData = e.dataTransfer.getData("text/plain");
 
                                     if (descriptionData) {
                                         // Re-assigning description to this category
                                         onAddRule({ keyword: descriptionData, category: cat.name, source: 'manual' });
+                                    } else if (plainTextData && !draggedItem) {
+                                        // Fallback: plain text from description drag (some browsers don't preserve custom MIME)
+                                        onAddRule({ keyword: plainTextData, category: cat.name, source: 'manual' });
                                     } else if (draggedItem) {
                                         // Reordering category
                                         onDrop(cat);
                                     }
-                                    onDragLeave(); // Reset indicator
+                                    onDragLeave();
                                 }}
                                 onDragOver={(e) => {
                                     e.preventDefault();
+                                    e.stopPropagation();
+                                    e.dataTransfer.dropEffect = draggedItem ? 'move' : 'copy';
                                     onDragEnter(cat.name);
                                 }}
                                 onDragEnter={() => onDragEnter(cat.name)}
@@ -470,16 +492,27 @@ const CategoryManagementView: React.FC<Props> = (props) => {
 
     const handleDragEnter = (categoryName: string) => {
         if (draggedItem) {
+            // Category reordering - only allow within same type
             if (props.categories.find(c => c.name === categoryName)?.type === draggedItem.type) {
                 setDropTarget(categoryName);
             }
         } else {
+            // Description drag from right panel - allow drop on any category
             setDropTarget(categoryName);
         }
     };
 
     const handleDragLeave = () => {
         setDropTarget(null);
+    };
+
+    const handleDragLeaveEvent = (e: React.DragEvent) => {
+        // Only clear dropTarget if actually leaving the container (not entering a child)
+        const relatedTarget = e.relatedTarget as HTMLElement;
+        const currentTarget = e.currentTarget as HTMLElement;
+        if (!currentTarget.contains(relatedTarget)) {
+            setDropTarget(null);
+        }
     };
 
     const commonProps = {
@@ -500,6 +533,7 @@ const CategoryManagementView: React.FC<Props> = (props) => {
         onDrop: handleDrop,
         onDragEnter: handleDragEnter,
         onDragLeave: handleDragLeave,
+        onDragLeaveEvent: handleDragLeaveEvent,
     };
 
     return (
@@ -507,7 +541,9 @@ const CategoryManagementView: React.FC<Props> = (props) => {
             <div>
                 <h3 className="text-3xl font-bold text-text-inverted">카테고리 및 자동 분류 관리</h3>
                 <p className="mt-1 text-text-inverted-muted">
-                    AI가 추천한 카테고리를 비즈니스에 맞게 관리하고, 키워드 규칙을 추가하여 자동 분류 정확도를 높일 수 있습니다.
+                    통장 거래가 어떤 항목(예: 식자재, 인건비, 카드매출 등)으로 분류되는지 관리하는 화면입니다.
+                    왼쪽에서 분류 항목을 추가/삭제/이름변경할 수 있고, 오른쪽에서 각 항목에 속한 거래 내역을 확인할 수 있습니다.
+                    잘못 분류된 거래는 오른쪽에서 드래그하여 왼쪽의 올바른 항목에 놓으면 자동으로 재분류됩니다.
                 </p>
             </div>
             

@@ -521,14 +521,18 @@ const MainLayout: React.FC<Props> = ({ initialData, businessInfo, uploadedFiles,
       />
       <header className="bg-surface-card shadow-md border-b border-border-color p-4 flex justify-between items-center z-10 shrink-0">
           <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-3">
-                   <div className="p-2 bg-brand-primary rounded-lg shadow">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-text-on-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 8l3 5m0 0l3-5m-3 5v4m0-4h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <button onClick={onReset} title="홈으로 돌아가기" className="flex items-center space-x-3 group cursor-pointer">
+                   <div className="relative p-2.5 bg-gradient-to-br from-brand-primary to-indigo-700 rounded-xl shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-200">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white"></div>
                   </div>
-                  <span className="text-xl font-bold text-text-primary">{businessInfo.name}</span>
-              </div>
+                  <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-brand-primary tracking-wider uppercase">AI 통장정리</span>
+                      <span className="text-lg font-bold text-text-primary leading-tight">{businessInfo.name}</span>
+                  </div>
+              </button>
               <nav className="hidden md:flex items-center space-x-1 bg-surface-subtle p-1 rounded-xl">
                    {navItems.map(item => (
                       <NavItem 

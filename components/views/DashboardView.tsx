@@ -245,14 +245,17 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
   );
 
   // 섹션 제목에 기간 표시하는 헬퍼
-  const SectionTitle = ({ title, icon }: { title: string; icon?: string }) => (
-    <h3 className="text-xl font-semibold mb-4 text-text-primary">
-      {icon && <span className="mr-1">{icon}</span>}
-      {title}
-      <span className="ml-2 text-sm font-normal text-brand-accent bg-brand-primary/20 px-2 py-0.5 rounded-full">
-        {periodLabel}
-      </span>
-    </h3>
+  const SectionTitle = ({ title, icon, desc }: { title: string; icon?: string; desc?: string }) => (
+    <div className="mb-4">
+      <h3 className="text-xl font-semibold text-text-primary">
+        {icon && <span className="mr-1">{icon}</span>}
+        {title}
+        <span className="ml-2 text-sm font-normal text-brand-accent bg-brand-primary/20 px-2 py-0.5 rounded-full">
+          {periodLabel}
+        </span>
+      </h3>
+      {desc && <p className="text-sm text-text-muted mt-1">{desc}</p>}
+    </div>
   );
 
   return (
@@ -261,7 +264,7 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold text-text-inverted">종합 대시보드</h2>
-          <p className="mt-1 text-text-inverted-muted">{businessInfo.name} 경영 손익 분석</p>
+          <p className="mt-1 text-text-inverted-muted">통장 거래 내역을 바탕으로 수입과 지출을 한눈에 정리한 요약 화면입니다. 기간을 선택하면 해당 기간의 재무 현황만 볼 수 있습니다.</p>
         </div>
         <div className="flex items-center gap-3">
           {/* 기간 선택 드롭다운 */}
@@ -292,7 +295,7 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
 
       {/* 손익계산서 */}
       <div className="bg-surface-card p-6 rounded-xl shadow-lg border border-border-color">
-        <SectionTitle title="경영 손익 분석표" icon="📊" />
+        <SectionTitle title="경영 손익 분석표" icon="📊" desc="매출, 원가, 인건비 등 주요 항목별로 수입과 지출을 정리한 표입니다. 우리 사업의 이익 구조를 한눈에 파악할 수 있습니다." />
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -355,18 +358,18 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
 
       {/* 월별 차트 */}
       <div className="bg-surface-card p-6 rounded-xl shadow-lg border border-border-color">
-        <SectionTitle title="월별 재무 성과 분석" />
+        <SectionTitle title="월별 재무 성과 분석" desc="월별 수입(파란색)과 지출(빨간색) 추이를 막대 그래프로 보여줍니다. 어느 달에 돈이 많이 들어오고 나갔는지 비교해 보세요." />
         <IncomeExpenseChart data={monthlyChartData} />
       </div>
     
       {/* 카테고리 파이차트 */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="bg-surface-card p-6 rounded-xl shadow-lg border border-border-color">
-          <SectionTitle title="영업 수익 구성" />
+          <SectionTitle title="영업 수익 구성" desc="어디서 돈이 들어왔는지 비율로 보여줍니다." />
           <CategoryPieChart data={operatingTransactions} type="operating_income" categories={categories} />
         </div>
         <div className="bg-surface-card p-6 rounded-xl shadow-lg border border-border-color">
-          <SectionTitle title="영업 비용 구성" />
+          <SectionTitle title="영업 비용 구성" desc="돈이 어디에 가장 많이 나갔는지 비율로 보여줍니다." />
           <CategoryPieChart data={operatingTransactions} type="operating_expense" categories={categories} />
         </div>
       </div>
@@ -374,11 +377,11 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
       {/* Top 5 추이 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-surface-card p-6 rounded-xl shadow-lg border border-border-color">
-          <SectionTitle title="상위 5개 수입 항목 추이" />
+          <SectionTitle title="상위 5개 수입 항목 추이" desc="가장 큰 수입원 5개의 월별 변화를 보여줍니다." />
           <TopCategoriesChart data={operatingTransactions} type="operating_income" />
         </div>
         <div className="bg-surface-card p-6 rounded-xl shadow-lg border border-border-color">
-          <SectionTitle title="상위 5개 비용 항목 추이" />
+          <SectionTitle title="상위 5개 비용 항목 추이" desc="가장 큰 지출 항목 5개의 월별 변화를 보여줍니다." />
           <TopCategoriesChart data={operatingTransactions} type="operating_expense" />
         </div>
       </div>
