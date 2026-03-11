@@ -146,6 +146,8 @@ const getPrintableStyles = () => `
 
 /**
  * 화면에 렌더링된 실제 DOM 요소를 캡처하여 PDF로 변환
+ * - Landscape A4 사용 → 11pt 상당 글씨 크기 보장
+ * - 한글 헤더를 HTML 캡처로 처리 (jsPDF 한글 미지원 우회)
  * - 차트, 그래프, 표를 포함한 전체 컨텐츠를 그대로 캡처
  * - 섹션별로 나누어 페이지 넘김 처리
  */
@@ -155,79 +157,92 @@ export const exportViewToPdf = async (
     businessName: string,
     filename: string
 ) => {
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
+    // Landscape A4: 297mm × 210mm → 넓은 폭으로 글씨 크기 확보 (~11pt)
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const pdfWidth = pdf.internal.pageSize.getWidth();   // 297mm
+    const pdfHeight = pdf.internal.pageSize.getHeight();  // 210mm
     const margin = 10;
-    const contentWidth = pdfWidth - 2 * margin;
-    const usableHeight = pdfHeight - 2 * margin;
+    const contentWidth = pdfWidth - 2 * margin;  // 277mm
+    const usableHeight = pdfHeight - 2 * margin; // 190mm
 
-    // PDF 헤더 (텍스트로 직접 출력)
-    pdf.setFontSize(18);
-    pdf.setTextColor(0, 0, 0);
-    pdf.text(`${businessName} - ${title}`, pdfWidth / 2, margin + 8, { align: 'center' });
-    pdf.setFontSize(11);
-    pdf.setTextColor(100, 100, 100);
-    pdf.text(`보고서 생성일: ${new Date().toLocaleDateString('ko-KR')}`, pdfWidth / 2, margin + 15, { align: 'center' });
-    pdf.setDrawColor(51, 65, 85);
-    pdf.setLineWidth(0.5);
-    pdf.line(margin, margin + 18, pdfWidth - margin, margin + 18);
+    // ── 한글 헤더를 HTML로 만들어 캡처 (jsPDF 한글 깨짐 방지) ──
+    const headerDiv = document.createElement('div');
+    headerDiv.style.cssText = 'position:absolute;left:-9999px;top:0;width:1200px;background:#fff;padding:20px 30px;font-family:system-ui,-apple-system,sans-serif;';
+    headerDiv.innerHTML = `
+        <div style="text-align:center;border-bottom:3px solid #1e40af;padding-bottom:12px;">
+            <h1 style="font-size:28px;margin:0 0 6px 0;color:#111827;font-weight:800;letter-spacing:-0.5px;">${businessName} — ${title}</h1>
+            <p style="font-size:15px;color:#4b5563;margin:0;">보고서 생성일: ${new Date().toLocaleDateString('ko-KR')}</p>
+        </div>
+    `;
+    document.body.appendChild(headerDiv);
 
-    let currentY = margin + 22;
+    try {
+        const headerCanvas = await html2canvas(headerDiv, {
+            scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+        });
+        const headerImgData = headerCanvas.toDataURL('image/png');
+        const headerProps = pdf.getImageProperties(headerImgData);
+        const headerHeight = (headerProps.height * contentWidth) / headerProps.width;
+        pdf.addImage(headerImgData, 'PNG', margin, margin, contentWidth, headerHeight);
 
-    // 컨텐츠의 직접 자식 요소들을 각각의 섹션으로 처리
-    const sections = Array.from(contentElement.children).filter(
-        child => child instanceof HTMLElement
-    ) as HTMLElement[];
+        let currentY = margin + headerHeight + 4;
 
-    for (const section of sections) {
-        try {
-            const canvas = await html2canvas(section, {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                logging: false,
-                windowWidth: contentElement.scrollWidth || 1200,
-            });
+        // ── 컨텐츠 섹션별 캡처 ──
+        const sections = Array.from(contentElement.children).filter(
+            child => child instanceof HTMLElement
+        ) as HTMLElement[];
 
-            const imgData = canvas.toDataURL('image/png');
-            const imgProps = pdf.getImageProperties(imgData);
-            const sectionHeight = (imgProps.height * contentWidth) / imgProps.width;
+        for (const section of sections) {
+            try {
+                const canvas = await html2canvas(section, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    windowWidth: contentElement.scrollWidth || 1200,
+                });
 
-            const remaining = usableHeight - (currentY - margin);
+                const imgData = canvas.toDataURL('image/png');
+                const imgProps = pdf.getImageProperties(imgData);
+                const sectionHeight = (imgProps.height * contentWidth) / imgProps.width;
 
-            // 섹션이 남은 공간에 안 들어가면 새 페이지
-            if (sectionHeight > remaining && currentY > margin + 25) {
-                pdf.addPage();
-                currentY = margin;
-            }
+                const remaining = usableHeight - (currentY - margin);
 
-            if (sectionHeight > usableHeight) {
-                // 매우 긴 섹션 → 이미지 슬라이싱
-                let heightLeft = sectionHeight;
-                let position = currentY;
-
-                pdf.addImage(imgData, 'PNG', margin, position, contentWidth, sectionHeight);
-                heightLeft -= (usableHeight - (position - margin));
-
-                while (heightLeft > 0) {
+                // 섹션이 남은 공간에 안 들어가면 새 페이지
+                if (sectionHeight > remaining && currentY > margin + headerHeight + 10) {
                     pdf.addPage();
-                    position = margin - (sectionHeight - heightLeft);
-                    pdf.addImage(imgData, 'PNG', margin, position, contentWidth, sectionHeight);
-                    heightLeft -= usableHeight;
+                    currentY = margin;
                 }
-                currentY = margin + (sectionHeight % usableHeight || usableHeight);
-            } else {
-                // 정상 배치
-                pdf.addImage(imgData, 'PNG', margin, currentY, contentWidth, sectionHeight);
-                currentY += sectionHeight + 3;
-            }
-        } catch (err) {
-            console.error('섹션 캡처 오류:', err);
-        }
-    }
 
-    pdf.save(`${filename}.pdf`);
+                if (sectionHeight > usableHeight) {
+                    // 매우 긴 섹션 → 이미지 슬라이싱
+                    let heightLeft = sectionHeight;
+                    let position = currentY;
+
+                    pdf.addImage(imgData, 'PNG', margin, position, contentWidth, sectionHeight);
+                    heightLeft -= (usableHeight - (position - margin));
+
+                    while (heightLeft > 0) {
+                        pdf.addPage();
+                        position = margin - (sectionHeight - heightLeft);
+                        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, sectionHeight);
+                        heightLeft -= usableHeight;
+                    }
+                    currentY = margin + (sectionHeight % usableHeight || usableHeight);
+                } else {
+                    // 정상 배치
+                    pdf.addImage(imgData, 'PNG', margin, currentY, contentWidth, sectionHeight);
+                    currentY += sectionHeight + 4;
+                }
+            } catch (err) {
+                console.error('섹션 캡처 오류:', err);
+            }
+        }
+
+        pdf.save(`${filename}.pdf`);
+    } finally {
+        document.body.removeChild(headerDiv);
+    }
 };
 
 
