@@ -115,14 +115,22 @@ const MainLayout: React.FC<Props> = ({ initialData, businessInfo, uploadedFiles,
     URL.revokeObjectURL(url);
   }, [businessInfo, uploadedFiles, transactions, categories, categoryRules]);
 
-  const applyRules = useCallback((txList: Transaction[], ruleList: CategoryRule[]): Transaction[] => {
+  const applyRules = useCallback((txList: Transaction[], ruleList: CategoryRule[], currentCategories: Category[]): Transaction[] => {
       return txList.map(tx => {
           const matchingRule = ruleList
               .filter(rule => tx.description.toLowerCase().includes(rule.keyword.toLowerCase()))
               .sort((a, b) => b.keyword.length - a.keyword.length)[0];
           
           if (matchingRule) {
-              return { ...tx, category: matchingRule.category };
+              const ruleCategory = currentCategories.find(c => c.name === matchingRule.category);
+              const isIncomeRule = ruleCategory ? ruleCategory.type.includes('income') : (matchingRule.category.includes('수익') || matchingRule.category.includes('매출'));
+              const isIncomeTx = tx.credit > 0;
+              
+              if (isIncomeRule === isIncomeTx) {
+                  return { ...tx, category: matchingRule.category };
+              } else {
+                  console.warn(`[규칙 적용 무시] "${tx.description}"에 "${matchingRule.category}" 규칙이 매칭되었으나, 수입/지출 속성이 다릅니다.`);
+              }
           }
           
           return tx;
@@ -130,7 +138,7 @@ const MainLayout: React.FC<Props> = ({ initialData, businessInfo, uploadedFiles,
   }, []);
 
   const runClassification = useCallback(async (txsToClassify: Transaction[], currentRules: CategoryRule[], allCategories: Category[], info: BusinessInfo) => {
-      let classifiedTxs = applyRules(txsToClassify, currentRules);
+      let classifiedTxs = applyRules(txsToClassify, currentRules, allCategories);
       const uncategorizedAfterRules = classifiedTxs.filter(t => t.category === DEFAULT_CATEGORY_INCOME || t.category === DEFAULT_CATEGORY_EXPENSE);
 
       if (uncategorizedAfterRules.length > 0 && allCategories.length > 0) {

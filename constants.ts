@@ -326,37 +326,53 @@ Object.entries(CATEGORY_ALIASES).forEach(([alias, standard]) => {
  * 4단계: 부분 문자열 매칭
  * 실패 시: 수입/지출 기본 카테고리 반환
  */
-export function normalizeCategoryName(aiName: string, isIncome: boolean): string {
+export function normalizeCategoryName(aiName: string, isIncome: boolean, availableCategories?: Category[]): string {
   const trimmed = aiName.trim();
+  const nKey = normalizeKey(trimmed);
+  let resolvedName = '';
   
   // 1단계: 정확한 매칭
-  if (CATEGORY_MAP[trimmed]) return trimmed;
-  
+  if (CATEGORY_MAP[trimmed]) resolvedName = trimmed;
   // 2단계: 정규화 키 매칭
-  const nKey = normalizeKey(trimmed);
-  const exactNormalized = NORMALIZED_CATEGORY_INDEX.get(nKey);
-  if (exactNormalized) return exactNormalized;
-  
+  else if (NORMALIZED_CATEGORY_INDEX.get(nKey)) resolvedName = NORMALIZED_CATEGORY_INDEX.get(nKey)!;
   // 3단계: 별칭 매칭
-  const aliasMatch = NORMALIZED_ALIAS_INDEX.get(nKey);
-  if (aliasMatch) return aliasMatch;
-  
-  // 4단계: 부분 문자열 매칭 (AI가 이름을 약간 변형한 경우)
-  for (const standardName of ALL_CATEGORY_NAMES) {
-    if (trimmed.includes(standardName) || standardName.includes(trimmed)) {
-      return standardName;
+  else if (NORMALIZED_ALIAS_INDEX.get(nKey)) resolvedName = NORMALIZED_ALIAS_INDEX.get(nKey)!;
+  // 4단계: 부분 문자열 매칭
+  else {
+    for (const standardName of ALL_CATEGORY_NAMES) {
+      if (trimmed.includes(standardName) || standardName.includes(trimmed)) {
+        resolvedName = standardName;
+        break;
+      }
+    }
+    // 5단계: 정규화 키 부분 매칭
+    if (!resolvedName) {
+      for (const [stdKey, stdName] of NORMALIZED_CATEGORY_INDEX.entries()) {
+        if (nKey.includes(stdKey) || stdKey.includes(nKey)) {
+          resolvedName = stdName;
+          break;
+        }
+      }
     }
   }
   
-  // 5단계: 정규화 키 부분 매칭
-  for (const [stdKey, stdName] of NORMALIZED_CATEGORY_INDEX.entries()) {
-    if (nKey.includes(stdKey) || stdKey.includes(nKey)) {
-      return stdName;
-    }
+  if (resolvedName) {
+      let isValid = true;
+      if (availableCategories) {
+          const cat = availableCategories.find(c => c.name === resolvedName);
+          if (cat) isValid = cat.type.includes('income') === isIncome;
+      } else {
+          const cat = CATEGORY_MAP[resolvedName];
+          if (cat) isValid = cat.type.includes('income') === isIncome;
+      }
+
+      if (isValid) return resolvedName;
+      console.warn(`[카테고리 속성 불일치] AI 반환값: "${resolvedName}" (수입/지출 속성 다름) → 기본 카테고리 사용`);
+  } else {
+      console.warn(`[카테고리 매칭 실패] AI 반환값: "${aiName}" 미상 → 기본 카테고리 사용`);
   }
   
   // 실패 시 기본값
-  console.warn(`[카테고리 매칭 실패] AI 반환값: "${aiName}" → 기본 카테고리 사용`);
   return isIncome ? DEFAULT_CATEGORY_INCOME : DEFAULT_CATEGORY_EXPENSE;
 }
 
