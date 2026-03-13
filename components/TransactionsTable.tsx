@@ -68,6 +68,11 @@ const TransactionsTable: React.FC<Props> = ({ transactions, categories, onUpdate
                       onChange={(e) => handleCategoryChange(tx.id, e.target.value)}
                       className="bg-background-main border border-border-color rounded-md px-2 py-1 focus:ring-brand-primary focus:border-brand-primary text-text-primary text-sm"
                     >
+                      {!availableCategories.some(c => c.name === tx.category) && (
+                        <option value={tx.category} className="text-red-500 font-semibold">
+                          {tx.category} (⚠️ 맵핑 오류)
+                        </option>
+                      )}
                       {availableCategories.map((cat) => (
                         <option key={cat.name} value={cat.name}>{cat.name}</option>
                       ))}

@@ -59,16 +59,16 @@ function getPeriodLabel(period: string): string {
 }
 
 // 카테고리 level2 안전하게 가져오기
-function safeGetLevel2(categoryName: string, isIncome: boolean): string {
-  const cat = CATEGORY_MAP[categoryName];
+function safeGetLevel2(categoryName: string, isIncome: boolean, categories: Category[]): string {
+  const cat = categories.find(c => c.name === categoryName);
   if (cat) return cat.level2;
   // 매칭 안 되는 카테고리 → 기본 분류
   if (isIncome) return '영업외 수익';
   return '사업외 지출';
 }
 
-function safeGetCostGroup(categoryName: string): string | null {
-  const cat = CATEGORY_MAP[categoryName];
+function safeGetCostGroup(categoryName: string, categories: Category[]): string | null {
+  const cat = categories.find(c => c.name === categoryName);
   return cat?.costGroup || null;
 }
 
@@ -88,7 +88,7 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
     const txs = filteredTransactions;
     
     const operatingTxs = txs.filter(tx => {
-        const cat = CATEGORY_MAP[tx.category];
+        const cat = categories.find(c => c.name === tx.category);
         const type = cat?.type;
         return type === 'operating_income' || type === 'operating_expense';
     });
@@ -105,7 +105,7 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
       let total = 0;
       txs.forEach(t => {
         const isIncome = t.credit > 0;
-        const l2 = safeGetLevel2(t.category, isIncome);
+        const l2 = safeGetLevel2(t.category, isIncome, categories);
         if (l2 === level2) {
           total += isIncome ? t.credit : t.debit;
         }
@@ -116,7 +116,7 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
     const sumByCostGroup = (group: string) => {
       let total = 0;
       txs.forEach(t => {
-        if (t.debit > 0 && safeGetCostGroup(t.category) === group) {
+        if (t.debit > 0 && safeGetCostGroup(t.category, categories) === group) {
           total += t.debit;
         }
       });
@@ -142,8 +142,8 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
       const result: Record<string, number> = {};
       txs.forEach(t => {
         const isIncome = t.credit > 0;
-        const l2 = safeGetLevel2(t.category, isIncome);
-        const cg = safeGetCostGroup(t.category);
+        const l2 = safeGetLevel2(t.category, isIncome, categories);
+        const cg = safeGetCostGroup(t.category, categories);
         if (l2 === level2 && (!costGroup || cg === costGroup)) {
           const amount = isIncome ? t.credit : t.debit;
           result[t.category] = (result[t.category] || 0) + amount;
@@ -163,7 +163,7 @@ const DashboardView: React.FC<Props> = ({ transactions, businessInfo, categories
         monthlyData[month] = { operatingRevenue: 0, operatingExpense: 0, nonOperatingIncome: 0, nonOperatingExpense: 0 };
       }
       const isIncome = tx.credit > 0;
-      const l2 = safeGetLevel2(tx.category, isIncome);
+      const l2 = safeGetLevel2(tx.category, isIncome, categories);
       if (l2 === '영업 수익') monthlyData[month].operatingRevenue += tx.credit;
       else if (l2 === '영업 비용') monthlyData[month].operatingExpense += tx.debit;
       else if (l2 === '영업외 수익') monthlyData[month].nonOperatingIncome += tx.credit;
