@@ -331,7 +331,15 @@ const MainLayout: React.FC<Props> = ({ initialData, businessInfo, uploadedFiles,
   const handleUpdateTransaction = (updatedTx: Transaction) => {
     setTransactions(currentTxs => {
         const originalTx = currentTxs.find(t => t.id === updatedTx.id);
-        const updatedTransactions = currentTxs.map(tx => (tx.id === updatedTx.id ? updatedTx : tx));
+        const updatedTransactions = currentTxs.map(tx => {
+            // Update the specific transaction
+            if (tx.id === updatedTx.id) return updatedTx;
+            // Also apply this change to other transactions with the EXACT SAME description
+            if (tx.description === updatedTx.description) {
+                return { ...tx, category: updatedTx.category };
+            }
+            return tx;
+        });
         
         if (originalTx && originalTx.category !== updatedTx.category) {
             // Learn from manual change: create a rule for this description
@@ -343,12 +351,6 @@ const MainLayout: React.FC<Props> = ({ initialData, businessInfo, uploadedFiles,
                 }
                 return [...prevRules, newRule];
             });
-             // Also apply this change to other similar transactions
-            return updatedTransactions.map(t =>
-                t.description === updatedTx.description
-                    ? { ...t, category: updatedTx.category }
-                    : t
-            );
         }
         return updatedTransactions;
     });

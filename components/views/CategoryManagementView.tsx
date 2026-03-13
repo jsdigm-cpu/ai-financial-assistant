@@ -553,7 +553,7 @@ const CategoryManagementView: React.FC<Props> = (props) => {
                 </p>
             </div>
             
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-stretch">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start relative">
                 <div className="space-y-8">
                      <div className="space-y-4">
                         <h3 className="text-2xl font-bold text-text-primary">수입</h3>
@@ -586,7 +586,7 @@ const CategoryManagementView: React.FC<Props> = (props) => {
                         />
                     </div>
                 </div>
-                <div className="h-full">
+                <div className="sticky top-4 h-[calc(100vh-120px)] overflow-hidden flex flex-col">
                    <CategorizedItemsList
                      category={selectedCategory}
                      transactions={props.transactions}
