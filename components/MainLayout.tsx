@@ -122,10 +122,7 @@ const MainLayout: React.FC<Props> = ({ initialData, businessInfo, uploadedFiles,
               .sort((a, b) => b.keyword.length - a.keyword.length)[0];
           
           if (matchingRule) {
-              // 규칙의 카테고리명을 표준 계정명으로 정규화
-              const isIncome = tx.credit > 0;
-              const normalizedCategory = normalizeCategoryName(matchingRule.category, isIncome);
-              return { ...tx, category: normalizedCategory };
+              return { ...tx, category: matchingRule.category };
           }
           
           return tx;
@@ -322,7 +319,12 @@ const MainLayout: React.FC<Props> = ({ initialData, businessInfo, uploadedFiles,
         }
         
         if (shouldReclassify) {
-            setTransactions(prevTxs => applyRules(prevTxs, updatedRules));
+            setTransactions(prevTxs => prevTxs.map(tx => {
+                if (tx.description.toLowerCase().includes(rule.keyword.toLowerCase())) {
+                    return { ...tx, category: rule.category };
+                }
+                return tx;
+            }));
         }
         return updatedRules;
     });
